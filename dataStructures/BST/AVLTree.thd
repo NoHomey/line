@@ -1,0 +1,303 @@
+#pragma once
+
+#include "./BST.thd"
+#include "../../utils/types/Optional.thd"
+
+namespace line {
+
+namespace dataStructures {
+
+namespace BST {
+
+using line::utils::types::Optional;
+
+template<typename T, typename Key = T>
+class AVLTree {
+public:
+    AVLTree() noexcept;
+
+    AVLTree(const AVLTree& other) = delete;
+
+    AVLTree(AVLTree&& other) noexcept = delete;
+
+    ~AVLTree() noexcept;
+
+    AVLTree& operator=(const AVLTree& other) = delete;
+
+    AVLTree& operator=(AVLTree&& other) noexcept = delete;
+    
+public:
+    bool isEmpty() const noexcept;
+
+    std::size_t height() const noexcept;
+
+    Optional<const T&> find(const Key& key) const noexcept;
+
+public:
+    Optional<T&> find(const Key& key) noexcept;
+
+    void insert(const T& data);
+
+    void insert(T&& data);
+
+    void destroy() noexcept;
+
+private:
+    class Node;
+
+private:
+    static std::size_t height(const Node* node) noexcept;
+
+    static Node* rotateLeft(Node* root) noexcept;
+
+    static Node* rotateRight(Node* root) noexcept;
+
+    static const T& extractConstRef(void* ptr) noexcept;
+
+    static T& extractRef(void* ptr) noexcept;
+
+private:
+    static Node* rotate(Node* root, const T& data);
+
+    template<typename Data>
+    void insert(Data data);
+
+public:
+    Node* root;
+
+private:
+class Node: public BST::Node<T> {
+public:
+    Node(const T& data, Node* left = nullptr, Node* right = nullptr);
+
+    Node(T&& data, Node* left = nullptr, Node* right = nullptr) noexcept;
+
+    Node(const Node& other) = delete;
+
+    Node(Node&& other) = delete;
+
+    ~Node() noexcept = default;
+    
+    Node& operator=(const Node& other) = delete;
+
+    Node& operator=(Node&& other) = delete;
+
+public:
+    std::size_t height() const noexcept;
+
+    const Node* leftNode() const noexcept;
+
+    const Node* rightNode() const noexcept;
+
+public:
+    void updateHeight() noexcept;
+
+    Node*& leftNode() noexcept;
+
+    Node*& rightNode() noexcept;
+
+private:
+    std::size_t treeHeight;
+};
+
+};
+
+}
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include<cassert>
+#include <utility>
+#include <algorithm>
+#include "../../utils/types/ComparsionResult.h"
+
+template<typename T, typename Key>
+line::dataStructures::BST::AVLTree<T, Key>::Node::Node(const T& data, Node* left, Node* right)
+: BST::Node<T>{data, left, right}, treeHeight{1} { }
+
+template<typename T, typename Key>
+line::dataStructures::BST::AVLTree<T, Key>::Node::Node(T&& data, Node* left, Node* right) noexcept
+: BST::Node<T>{std::move(data), left, right}, treeHeight{1} { }
+
+template<typename T, typename Key>
+std::size_t
+line::dataStructures::BST::AVLTree<T, Key>::Node::height() const noexcept {
+    return treeHeight;
+}
+
+template<typename T, typename Key>
+const typename line::dataStructures::BST::AVLTree<T, Key>::Node*
+line::dataStructures::BST::AVLTree<T, Key>::Node::leftNode() const noexcept {
+    return reinterpret_cast<const Node*>(BST::Node<T>::left);
+}
+
+template<typename T, typename Key>
+const typename line::dataStructures::BST::AVLTree<T, Key>::Node*
+line::dataStructures::BST::AVLTree<T, Key>::Node::rightNode() const noexcept {
+    return reinterpret_cast<const Node*>(BST::Node<T>::right);
+}
+
+template<typename T, typename Key>
+void
+line::dataStructures::BST::AVLTree<T, Key>::Node::updateHeight() noexcept {
+    treeHeight = 1 + std::max(AVLTree<T, Key>::height(leftNode()), AVLTree<T, Key>::height(rightNode()));
+}
+
+template<typename T, typename Key>
+typename line::dataStructures::BST::AVLTree<T, Key>::Node*&
+line::dataStructures::BST::AVLTree<T, Key>::Node::leftNode() noexcept {
+    return reinterpret_cast<Node*&>(BST::Node<T>::left);
+}
+
+template<typename T, typename Key>
+typename line::dataStructures::BST::AVLTree<T, Key>::Node*&
+line::dataStructures::BST::AVLTree<T, Key>::Node::rightNode() noexcept {
+    return reinterpret_cast<Node*&>(BST::Node<T>::right);
+}
+
+template<typename T, typename Key>
+line::dataStructures::BST::AVLTree<T, Key>::AVLTree() noexcept
+: root{nullptr} { }
+
+template<typename T, typename Key>
+line::dataStructures::BST::AVLTree<T, Key>::~AVLTree() noexcept {
+    destroy();
+}
+
+template<typename T, typename Key>
+bool
+line::dataStructures::BST::AVLTree<T, Key>::isEmpty() const noexcept {
+    return isEmpty(root);
+}
+
+template<typename T, typename Key>
+std::size_t
+line::dataStructures::BST::AVLTree<T, Key>::height() const noexcept {
+    return height(root);
+}
+
+template<typename T, typename Key>
+line::utils::types::Optional<const T&>
+line::dataStructures::BST::AVLTree<T, Key>::find(const Key& key) const noexcept {
+    const Node* node = BST::find(const_cast<Node*>(root), key);
+    return line::utils::types::Optional<const T&>{node, extractConstRef};
+}
+
+template<typename T, typename Key>
+line::utils::types::Optional<T&>
+line::dataStructures::BST::AVLTree<T, Key>::find(const Key& key) noexcept {
+    Node* node = BST::find(root, key);
+    return line::utils::types::Optional<T&>{node, extractRef};
+}
+
+template<typename T, typename Key>
+std::size_t
+line::dataStructures::BST::AVLTree<T, Key>::height(const Node* node) noexcept {
+    return node ? node->height() : 0;
+}
+
+template<typename T, typename Key>
+typename line::dataStructures::BST::AVLTree<T, Key>::Node*
+line::dataStructures::BST::AVLTree<T, Key>::rotateRight(Node* root) noexcept {
+    assert(!BST::isEmpty(root));
+    Node* left = root->leftNode();
+    Node* leftRight = left->rightNode();
+
+    left->rightNode() = root;
+    root->leftNode() = leftRight;
+
+    root->updateHeight();
+    left->updateHeight();
+
+    return left;
+}
+
+template<typename T, typename Key>
+typename line::dataStructures::BST::AVLTree<T, Key>::Node*
+line::dataStructures::BST::AVLTree<T, Key>::rotateLeft(Node* root) noexcept {
+    assert(!BST::isEmpty(root));
+    Node* right = root->rightNode();
+    Node* rightLeft = right->leftNode();
+
+    right->leftNode() = root;
+    root->rightNode() = rightLeft;
+
+    root->updateHeight();
+    right->updateHeight();
+
+    return right;
+}
+
+template<typename T, typename Key>
+const T&
+line::dataStructures::BST::AVLTree<T, Key>::extractConstRef(void* ptr) noexcept {
+    assert(ptr);
+    return reinterpret_cast<const Node*>(ptr)->data;
+}
+
+template<typename T, typename Key>
+T&
+line::dataStructures::BST::AVLTree<T, Key>::extractRef(void* ptr) noexcept {
+    assert(ptr);
+    return reinterpret_cast<Node*>(ptr)->data;
+}
+
+template<typename T, typename Key>
+typename line::dataStructures::BST::AVLTree<T, Key>::Node*
+line::dataStructures::BST::AVLTree<T, Key>::rotate(Node* root, const T& data) {
+    using line::utils::types::ComparsionResult;
+    const std::size_t leftHeight = height(root->leftNode());
+    const std::size_t rightHeight = height(root->rightNode());
+    root->updateHeight();
+    if(leftHeight > (1 + rightHeight)) {
+        ComparsionResult comparsionResult = compare(root->leftNode()->data, data);
+        if(comparsionResult != ComparsionResult::Equal) {
+            if(comparsionResult == ComparsionResult::Less) {
+                root->leftNode() = rotateLeft(root->leftNode());
+            }
+            return rotateRight(root);
+        }
+    }
+    if(rightHeight > (1 + leftHeight)) {
+        ComparsionResult comparsionResult = compare(root->rightNode()->data, data);
+        if(comparsionResult != ComparsionResult::Equal) {
+            if(comparsionResult == ComparsionResult::Greater) {
+                root->rightNode() = rotateRight(root->rightNode());
+            }
+            return rotateLeft(root);
+        }
+    }
+    return root;
+}
+
+template<typename T, typename Key>
+template<typename Data>
+void
+line::dataStructures::BST::AVLTree<T, Key>::insert(Data data) {
+   root = BST::insert<Node, T, rotate>(root, std::forward<Data>(data)); 
+}
+
+template<typename T, typename Key>
+void
+line::dataStructures::BST::AVLTree<T, Key>::insert(const T& data) {
+    insert<const T&>(data);
+}
+
+template<typename T, typename Key>
+void
+line::dataStructures::BST::AVLTree<T, Key>::insert(T&& data) {
+    insert<T&&>(std::move(data));
+}
+
+template<typename T, typename Key>
+void
+line::dataStructures::BST::AVLTree<T, Key>::destroy() noexcept {
+    BST::destroy(root);
+    root = nullptr;
+}

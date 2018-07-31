@@ -1,0 +1,181 @@
+#pragma once
+
+#include <cstddef>
+
+namespace line {
+
+namespace dataStructures {
+
+namespace BST {
+
+template<typename T>
+struct Node {
+    Node* left;
+    Node* right;
+    T data;
+
+public:
+    Node(const T& data, Node* left = nullptr, Node* right = nullptr);
+
+    Node(T&& data, Node* left = nullptr, Node* right = nullptr) noexcept;
+
+    Node(const Node& other) = delete;
+
+    Node(Node&& other) = delete;
+
+    ~Node() noexcept = default;
+    
+    Node& operator=(const Node& other) = delete;
+
+    Node& operator=(Node&& other) = delete;
+
+public:
+    const Node* leftNode() const noexcept;
+
+    const Node* rightNode() const noexcept;
+
+public:
+    Node*& leftNode() noexcept;
+
+    Node*& rightNode() noexcept;
+};
+
+template<typename Node>
+bool isEmpty(const Node* root) noexcept;
+
+template<typename Node>
+std::size_t height(const Node* root) noexcept;
+
+template<typename Node, typename T, Node* (*routine) (Node*, const T&)>
+Node* insert(Node* root, const T& data);
+
+template<typename Node, typename T, Node* (*routine) (Node*, const T&)>
+Node* insert(Node* root, T&& data);
+
+template<typename Node, typename Key>
+Node* find(Node* root, const Key& key) noexcept;
+
+template<typename Node>
+void destroy(Node* root) noexcept;
+
+namespace internal {
+
+template<typename Node, typename T, typename Data, Node* (*routine) (Node*, const T&)>
+Node* insert(Node* root, Data data);
+
+}
+
+}
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include <cassert>
+#include <algorithm>
+#include <utility>
+#include "../../utils/types/ComparsionResult.h"
+
+template<typename T>
+line::dataStructures::BST::Node<T>::Node(const T& data, Node* left, Node* right)
+: left{left}, right{right}, data{data} { }
+
+template<typename T>
+line::dataStructures::BST::Node<T>::Node(T&& data, Node* left, Node* right) noexcept
+: left{left}, right{right}, data{std::move(data)} { }
+
+template<typename T>
+const typename line::dataStructures::BST::Node<T>*
+line::dataStructures::BST::Node<T>::leftNode() const noexcept {
+    return left;
+}
+
+template<typename T>
+const typename line::dataStructures::BST::Node<T>*
+line::dataStructures::BST::Node<T>::rightNode() const noexcept {
+    return right;
+}
+
+template<typename T>
+typename line::dataStructures::BST::Node<T>*&
+line::dataStructures::BST::Node<T>::leftNode() noexcept {
+    return left;
+}
+
+template<typename T>
+typename line::dataStructures::BST::Node<T>*&
+line::dataStructures::BST::Node<T>::rightNode() noexcept {
+    return right;
+}
+
+template<typename Node>
+bool
+line::dataStructures::BST::isEmpty(const Node* root) noexcept {
+    return !root;
+}
+
+template<typename Node>
+std::size_t
+line::dataStructures::BST::height(const Node* root) noexcept {
+    return root ? std::max(height(root->leftNode()), height(root->rightNode())) + 1 : 0;
+}
+
+template<typename Node, typename T, typename Data, Node* (*routine) (Node*, const T&)>
+Node*
+line::dataStructures::BST::internal::insert(Node* root, Data data) {
+    using line::utils::types::ComparsionResult;
+    if(isEmpty(root)) {
+        return new Node(std::forward<Data>(data));
+    }
+    switch(compare(root->data, data)) {
+        case ComparsionResult::Equal: return root;
+        case ComparsionResult::Less:
+            root->rightNode() = internal::insert<Node, T, Data, routine>(root->rightNode(), std::forward<Data>(data));
+            break;
+        case ComparsionResult::Greater:
+            root->leftNode() = internal::insert<Node, T, Data, routine>(root->leftNode(), std::forward<Data>(data));
+            break;
+        default: assert(false);
+    }
+    return routine(root, data);
+}
+
+template<typename Node, typename T, Node* (*routine) (Node*, const T&)>
+Node*
+line::dataStructures::BST::insert(Node* root, const T& data) {
+    return internal::insert<Node, T, const T&, routine>(root, data);
+}
+
+template<typename Node, typename T, Node* (*routine) (Node*, const T&)>
+Node*
+line::dataStructures::BST::insert(Node* root, T&& data) {
+    return internal::insert<Node, T, T&&, routine>(root, std::move(data));
+}
+
+template<typename Node, typename Key>
+Node*
+line::dataStructures::BST::find(Node* root, const Key& key) noexcept {
+    if(isEmpty(root)) {
+        return nullptr;
+    }
+    using line::utils::types::ComparsionResult;
+    ComparsionResult comparsionResult = compare(root->data, key);
+    if(comparsionResult == ComparsionResult::Equal) {
+        return root;
+    }
+    return find(comparsionResult == ComparsionResult::Less ? root->rightNode() : root->leftNode(), key);
+}
+
+template<typename Node>
+void
+line::dataStructures::BST::destroy(Node* root) noexcept {
+    if(!isEmpty(root)) {
+        destroy(root->leftNode());
+        destroy(root->rightNode());
+        delete root;
+    }
+}

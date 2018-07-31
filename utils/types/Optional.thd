@@ -1,0 +1,118 @@
+#pragma once
+
+#include <type_traits>
+
+namespace line {
+
+namespace utils {
+
+namespace types {
+
+template<typename T>
+class Optional {
+public:
+    using Type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
+
+public:
+    Optional() noexcept;
+
+    Optional(void* data, T (*extract) (void*)) noexcept;
+
+    Optional(const Optional& other) = default;
+
+    Optional(Optional&& other) noexcept;
+
+    ~Optional() noexcept = default;
+
+    Optional& operator=(const Optional& other) = delete;
+
+    Optional& operator=(Optional&& other) noexcept = delete;
+
+public:
+    bool isEmpty() const noexcept;
+
+    bool hasValue() const noexcept;
+
+    explicit operator bool() const noexcept;
+
+public:
+    T value() noexcept;
+
+    T operator*() noexcept;
+    
+public:
+    template<typename R>
+    Optional<R> map(Optional<R> (*f) (const Type&)) const;
+
+    template<typename R>
+    Optional<R> transform(Optional<R> (*f) (const Type&)) const;
+
+private:
+    void* data;
+    T (*extract) (void*);
+    bool empty;
+};
+
+}
+
+}
+
+}
+
+// IMPLEMENTATION
+
+
+#include <utility>
+#include <cassert>
+
+template<typename T>
+line::utils::types::Optional<T>::Optional() noexcept
+: data{nullptr}, extract{nullptr}, empty{true} { }
+
+template<typename T>
+line::utils::types::Optional<T>::Optional(void* data, T (*extract) (void*)) noexcept
+: data{data}, extract{extract}, empty{!data} { }
+
+template<typename T>
+bool
+line::utils::types::Optional<T>::isEmpty() const noexcept {
+    return empty;
+}
+
+template<typename T>
+bool
+line::utils::types::Optional<T>::hasValue() const noexcept {
+    return !isEmpty();
+}
+
+template<typename T>
+line::utils::types::Optional<T>::operator bool() const noexcept {
+    return hasValue();
+}
+
+template<typename T>
+T
+line::utils::types::Optional<T>::value() noexcept {
+    assert(hasValue());
+    return extract(data);
+}
+
+template<typename T>
+T
+line::utils::types::Optional<T>::operator*() noexcept {
+    return value();
+}
+
+template<typename T>
+template<typename R>
+line::utils::types::Optional<R>
+line::utils::types::Optional<T>::map(Optional<R> (*f) (const Type&)) const {
+    return isEmpty() ? Optional<R>() : f(value());
+}
+
+template<typename T>
+template<typename R>
+line::utils::types::Optional<R>
+line::utils::types::Optional<T>::transform(Optional<R> (*f) (const Type&)) const {
+    return map(f);
+}
