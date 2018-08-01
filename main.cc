@@ -1,6 +1,8 @@
 #include <iostream>
 #include <algorithm>
 #include "./utils/types/ComparsionResult.h"
+#include "./dataStructures/BST/AVLTree.thd"
+#include<queue>
 
 struct Test {
     int val;
@@ -21,14 +23,11 @@ line::utils::types::ComparsionResult compare(const Test& l, const Test& r) {
     return l.val == r.val ? ComparsionResult::Equal : (l.val < r.val ? ComparsionResult::Less : ComparsionResult::Greater);
 }
 
-line::utils::types::ComparsionResult compare(const Test& l, int r) {
+line::utils::types::ComparsionResult keyCompare(const Test& l, const int& r) {
     using line::utils::types::ComparsionResult;
     return l.val == r ? ComparsionResult::Equal : (l.val < r ? ComparsionResult::Less : ComparsionResult::Greater);
 }
 
-#include "./dataStructures/BST/AVLTree.thd"
-
-#include<queue>
 template<typename Node>
 void print(const Node* root) {
     if(root) {
@@ -54,8 +53,7 @@ void print(const Node* root) {
 }
 
 int main() {
-    line::dataStructures::BST::AVLTree<Test, int> tree;
-
+    line::dataStructures::BST::AVLTree<Test, int, compare, keyCompare> tree;
 
     for(int i = 1; i < 32; ++i) {
         tree.insert(Test{i});

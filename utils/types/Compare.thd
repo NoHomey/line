@@ -1,0 +1,21 @@
+#pragma once
+
+#include "./ComparsionResult.h"
+
+namespace line {
+
+namespace utils {
+
+namespace types {
+
+template<typename T>
+using Compare = ComparsionResult (*) (const T&, const T&);
+
+template<typename T, typename Key>
+using KeyCompare = ComparsionResult (*) (const T&, const Key&);
+
+}
+
+}
+
+}
