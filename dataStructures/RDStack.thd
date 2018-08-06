@@ -1,0 +1,177 @@
+#pragma once
+
+#include "./DoublyLinkedList.thd"
+
+namespace line {
+
+namespace dataStructures {
+
+template<typename T>
+class RDStack {
+public:
+    RDStack() noexcept;
+
+    RDStack(const RDStack& other) = delete;
+
+    RDStack(RDStack&& other) noexcept;
+
+    ~RDStack() noexcept;
+
+public:
+    RDStack& operator=(const RDStack& other) = delete;
+
+    RDStack& operator=(RDStack&& other) noexcept = delete;
+
+public:
+    bool isEmpty() const noexcept;
+
+    bool isAtLast() const noexcept;
+
+    const T& data() const noexcept;
+
+public:
+    void rewind() noexcept;
+
+    void push(const T& data);
+
+    void push(T&& data);
+
+    T& data() noexcept;
+
+    void pop() noexcept;
+
+    void discard() noexcept;
+
+    void next() noexcept;
+
+private:
+    template<typename Data>
+    void push(Data data);
+
+private:
+    using Node = line::dataStructures::DoublyLinkedList::Node<T>;
+
+private:
+    Node* head;
+    Node* current;
+};
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include <cassert>
+#include <utility>
+
+template<typename T>
+line::dataStructures::RDStack<T>::RDStack() noexcept
+: head{nullptr}, current{nullptr} { }
+
+template<typename T>
+line::dataStructures::RDStack<T>::RDStack(RDStack&& other) noexcept
+: head{other.head}, current{other.current} {
+    other.head = nullptr;
+    other.current = nullptr;
+}
+
+template<typename T>
+line::dataStructures::RDStack<T>::~RDStack() noexcept {
+    if(current) {
+        DoublyLinkedList::destroy(current);
+    }
+    head = nullptr;
+    current = nullptr;
+}
+
+template<typename T>
+bool
+line::dataStructures::RDStack<T>::isEmpty() const noexcept {
+    return !head;
+}
+
+template<typename T>
+bool
+line::dataStructures::RDStack<T>::isAtLast() const noexcept {
+    assert(current);
+    return !current->next;
+}
+
+template<typename T>
+const T&
+line::dataStructures::RDStack<T>::data() const noexcept {
+    assert(current);
+    return current->data;
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::rewind() noexcept {
+    current = head;
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::push(const T& data) {
+    push<const T&>(data);
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::push(T&& data) {
+    push<T&&>(std::move(data));
+}
+
+template<typename T>
+T&
+line::dataStructures::RDStack<T>::data() noexcept {
+    assert(!isEmpty());
+    return current->data;
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::pop() noexcept {
+    assert(!isEmpty());
+    assert(isAtLast());
+    current = DoublyLinkedList::removeAndReturnPrev(current);
+    if(!current) {
+        head = nullptr;
+    }
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::discard() noexcept {
+    assert(!isEmpty());
+    Node* tmp = current;
+    current = current->prev;
+    tmp->prev = nullptr;
+    if(current) {
+        current->next = nullptr;
+    } else {
+        head = nullptr;
+    }
+    DoublyLinkedList::destroy(tmp);
+}
+
+template<typename T>
+void
+line::dataStructures::RDStack<T>::next() noexcept {
+    assert(!isAtLast());
+    current = current->next;
+}
+
+template<typename T>
+template<typename Data>
+void
+line::dataStructures::RDStack<T>::push(Data data) {
+    if(isEmpty()) {
+        head = current = new Node{std::forward<Data>(data)};
+    }
+    assert(isAtLast());
+    current = DoublyLinkedList::insertAfter(current, data);
+}

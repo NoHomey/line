@@ -39,13 +39,6 @@ public:
     T value() noexcept;
 
     T operator*() noexcept;
-    
-public:
-    template<typename R>
-    Optional<R> map(Optional<R> (*f) (const Type&)) const;
-
-    template<typename R>
-    Optional<R> transform(Optional<R> (*f) (const Type&)) const;
 
 private:
     void* data;
@@ -101,18 +94,4 @@ template<typename T>
 T
 line::utils::types::Optional<T>::operator*() noexcept {
     return value();
-}
-
-template<typename T>
-template<typename R>
-line::utils::types::Optional<R>
-line::utils::types::Optional<T>::map(Optional<R> (*f) (const Type&)) const {
-    return isEmpty() ? Optional<R>() : f(value());
-}
-
-template<typename T>
-template<typename R>
-line::utils::types::Optional<R>
-line::utils::types::Optional<T>::transform(Optional<R> (*f) (const Type&)) const {
-    return map(f);
 }

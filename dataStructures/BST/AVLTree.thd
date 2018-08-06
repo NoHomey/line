@@ -17,7 +17,7 @@ public:
 
     AVLTree(const AVLTree& other) = delete;
 
-    AVLTree(AVLTree&& other) noexcept = delete;
+    AVLTree(AVLTree&& other) noexcept;
 
     ~AVLTree() noexcept;
 
@@ -61,7 +61,7 @@ private:
     template<typename Data>
     void insert(Data data);
 
-public:
+private:
     Node* root;
 
 private:
@@ -163,6 +163,12 @@ line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::Node::rightNode
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::AVLTree() noexcept
 : root{nullptr} { }
+
+template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::AVLTree(AVLTree&& other) noexcept
+: root{other.root} {
+    other.root = nullptr;
+}
 
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::~AVLTree() noexcept {

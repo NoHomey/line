@@ -1,0 +1,171 @@
+#pragma once
+
+namespace line {
+
+namespace dataStructures {
+
+namespace DoublyLinkedList {
+
+template<typename T>
+struct Node {
+    Node* prev;
+    Node* next;
+    T data;
+
+    Node() noexcept = delete;
+
+    Node(const T& data, Node* prev = nullptr, Node* next = nullptr);
+
+    Node(T&& data, Node* prev = nullptr, Node* next = nullptr) noexcept;
+
+    Node(const Node& other) = delete;
+
+    Node(Node&& other) noexcept = delete;
+
+    ~Node() noexcept = default;
+
+    Node& operator=(const Node& other) = delete;
+
+    Node& operator=(Node&& other) = delete;
+};
+
+template<typename T>
+bool isEmpty(const Node<T>* node) noexcept;
+
+template<typename T>
+Node<T>* insertBefore(Node<T>* node, const T& data);
+
+template<typename T>
+Node<T>* insertBefore(Node<T>* node, T&& data);
+
+template<typename T>
+Node<T>* insertAfter(Node<T>* node, const T& data);
+
+template<typename T>
+Node<T>* insertAfter(Node<T>* node, T&& data);
+
+template<typename T>
+Node<T>* removeAndReturnPrev(Node<T>* node);
+
+template<typename T>
+Node<T>* removeAndReturnNext(Node<T>* node);
+
+template<typename T>
+void destroy(Node<T>* node) noexcept;
+
+namespace internal {
+
+template<typename T, typename Data>
+Node<T>* insertBefore(Node<T>* node, Data data);
+
+template<typename T, typename Data>
+Node<T>* insertAfter(Node<T>* node, Data data);
+
+}
+
+}
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include <utility>
+#include <cassert>
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>::Node(const T& data, Node* prev, Node* next)
+: prev{prev}, next{next}, data{data} { }
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>::Node(T&& data, Node* prev, Node* next) noexcept
+: prev{prev}, next{next}, data{std::move(data)} { }
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::insertBefore(Node<T>* node, const T& data) {
+    return internal::insertBefore<T, const T&>(node, data);
+}
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::insertBefore(Node<T>* node, T&& data) {
+    return internal::insertBefore<T, T&&>(node, std::move(data));
+}
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::insertAfter(Node<T>* node, const T& data) {
+    return internal::insertAfter<T, const T&>(node, data);
+}
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::insertAfter(Node<T>* node, T&& data) {
+    return internal::insertAfter<T, T&&>(node, std::move(data));
+}
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::removeAndReturnPrev(Node<T>* node) {
+    assert(node);
+    assert(!node->next);
+    Node<T>* prev = node->prev;
+    prev->next = nullptr;
+    delete node;
+    return prev; 
+}
+
+template<typename T>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::removeAndReturnNext(Node<T>* node) {
+    assert(node);
+    assert(!node->prev);
+    Node<T>* next = node->next;
+    next->prev = nullptr;
+    delete node;
+    return next;
+}
+
+template<typename T>
+void
+line::dataStructures::DoublyLinkedList::destroy(Node<T>* node) noexcept {
+    assert(node);
+    Node<T>* prev = node->prev;
+    Node<T>* tmp = nullptr;
+    while(node) {
+        tmp = node;
+        node = node->next;
+        delete tmp;
+    }
+    while(prev) {
+        tmp = prev;
+        prev = prev->prev;
+        delete tmp;
+    }
+}
+
+template<typename T, typename Data>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::internal::insertBefore(Node<T>* node, Data data) {
+    Node<T>* inserted = new Node<T>{std::forward<Data>(data), nullptr, node};
+    if(node) {
+        assert(!node->prev);
+        node->prev = inserted;
+    }
+    return inserted;
+}
+
+template<typename T, typename Data>
+line::dataStructures::DoublyLinkedList::Node<T>*
+line::dataStructures::DoublyLinkedList::internal::insertAfter(Node<T>* node, Data data)  {
+    Node<T>* inserted = new Node<T>{std::forward<Data>(data), node, nullptr};
+    if(node) {
+        assert(!node->next);
+        node->next = inserted;
+    }
+    return inserted;
+}

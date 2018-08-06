@@ -1,0 +1,21 @@
+#pragma once
+
+#include "../types/ComparsionResult.h"
+
+namespace line {
+
+namespace utils {
+
+namespace funcs {
+
+template<typename Integer>
+line::utils::types::ComparsionResult integerToComparsionResult(Integer integer) noexcept {
+    return integer == 0 ? types::ComparsionResult::Equal
+        : (integer < 0 ? types::ComparsionResult::Less : types::ComparsionResult::Greater);
+}
+
+}
+
+}
+
+}

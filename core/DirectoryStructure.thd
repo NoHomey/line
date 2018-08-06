@@ -1,0 +1,304 @@
+#pragma once
+
+#include "../dataStructures/BST/AVLTree.thd"
+#include "../dataStructures/DoublyLinkedList.thd"
+#include "../dataStructures/RDStack.thd"
+#include "../utils/types/ComparsionResult.h"
+#include "../utils/types/Optional.thd"
+#include "./String/String.h"
+#include "./FilePathIterator/FilePathIterator.h"
+
+namespace line {
+
+namespace core {
+
+template<typename FileInfo>
+class DirectoryStructure {
+public:
+    DirectoryStructure(const line::core::String& rootDirPath, const line::core::String& rootDirName);
+
+    DirectoryStructure(line::core::String&& rootDirPath, const line::core::String& rootDirName);
+
+    DirectoryStructure(line::core::String&& rootDirPath, line::core::String&& rootDirName) noexcept;
+
+    DirectoryStructure(const line::core::String& rootDirPath, line::core::String&& rootDirName);
+
+    DirectoryStructure(const DirectoryStructure& other) = delete;
+
+    DirectoryStructure(DirectoryStructure&& other) noexcept = default;
+
+    ~DirectoryStructure() noexcept = default;
+
+    DirectoryStructure& operator=(const DirectoryStructure& other) = delete;
+
+    DirectoryStructure& operator=(DirectoryStructure&& other) noexcept = delete;
+
+public:
+    line::utils::types::Optional<const FileInfo&> find(FilePathIterator&& filePathIterator) const noexcept;
+
+public:
+    line::utils::types::Optional<FileInfo&> find(FilePathIterator&& filePathIterator) noexcept;
+
+    void insert(FilePathIterator&& filePathIterator, FileInfo&& fileInfo);
+    
+private:
+    struct File;
+    struct Directory;
+    using Name = line::core::String;
+    using SearchKey = line::core::String::StringSlice;
+
+private:
+    static line::utils::types::ComparsionResult strcmpWrappedResult(const char* left, const char* right) noexcept;
+
+    template<typename DirectoryObject>
+    static line::utils::types::ComparsionResult compare(const DirectoryObject& left, const DirectoryObject& right) noexcept;
+
+    template<typename DirectoryObject>
+    static line::utils::types::ComparsionResult keyCompare(const DirectoryObject& dirObject, const SearchKey& name) noexcept;
+
+    static FileInfo& getFileInfoRef(void* ptr) noexcept;
+
+    static const FileInfo& getFileInfoConstRef(void* ptr) noexcept;
+
+private:
+    File* findFile(FilePathIterator&& filePathIterator) noexcept;
+
+    void updateFilePathCache(FilePathIterator& filePathIterator);
+
+    Directory* ensurePathExists(Directory* parentDir, FilePathIterator& filePathIterator);
+
+private:
+struct File {
+    Name name;
+    FileInfo fileInfo;
+
+    File() noexcept = default;
+
+    File(const line::core::String& name, const FileInfo& fileInfo);
+
+    File(line::core::String&& name, const FileInfo& fileInfo);
+
+    File(line::core::String&& name, FileInfo&& fileInfo) noexcept;
+
+    File(const line::core::String& name, FileInfo&& fileInfo);
+
+    File(const File& other) = default;
+
+    File(File&& other) noexcept = default;
+
+    ~File() noexcept = default;
+
+    File& operator=(const File& other) = delete;
+
+    File& operator=(File&& other) noexcept = delete;
+};
+
+struct Directory {
+    template<typename DirectoryObject>
+    using DirectoryObjects = line::dataStructures::BST::AVLTree<DirectoryObject, SearchKey,
+        DirectoryStructure<FileInfo>::compare<DirectoryObject>,
+        DirectoryStructure<FileInfo>::keyCompare<DirectoryObject>>;
+    using Children = DirectoryObjects<Directory>;
+    using Files = DirectoryObjects<File>;
+    
+    Name name;
+    Children children;
+    Files files;
+
+    Directory() noexcept = default;
+
+    Directory(const line::core::String& name);
+
+    Directory(line::core::String&& name);
+
+    Directory(const Directory& other) = delete;
+
+    Directory(Directory&& other) noexcept = default;
+
+    ~Directory() noexcept = default;
+
+    Directory& operator=(const Directory& other) = delete;
+
+    Directory& operator=(Directory&& other) noexcept = delete;
+};
+
+private:
+    line::core::String rootDirPath;
+    Directory rootDir;
+    line::dataStructures::RDStack<Directory*> filePathCache;
+};
+
+}
+
+}
+
+
+// IMPLEMANTATION
+
+
+#include <cstring>
+#include <algorithm>
+#include "../utils/funcs/integerToComparsionResult.thd"
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const line::core::String& rootDirPath, const line::core::String& rootDirName)
+: rootDirPath{rootDirPath}, rootDir{rootDirName}, filePathCache{} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::DirectoryStructure(line::core::String&& rootDirPath, const line::core::String& rootDirName)
+: rootDirPath{std::move(rootDirPath)}, rootDir{rootDirName}, filePathCache{} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::DirectoryStructure(line::core::String&& rootDirPath, line::core::String&& rootDirName) noexcept
+: rootDirPath{std::move(rootDirPath)}, rootDir{std::move(rootDirName)}, filePathCache{} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const line::core::String& rootDirPath, line::core::String&& rootDirName)
+: rootDirPath{rootDirPath}, rootDir{std::move(rootDirName)}, filePathCache{} { }
+
+template<typename FileInfo>
+line::utils::types::Optional<const FileInfo&>
+line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) const noexcept {
+    return line::utils::types::Optional<const FileInfo&>{
+        const_cast<DirectoryStructure* const>(this)->findFile(std::move(filePathIterator)),
+        getFileInfoConstRef
+    };
+}
+
+template<typename FileInfo>
+line::utils::types::Optional<FileInfo&> 
+line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) noexcept {
+    return line::utils::types::Optional<FileInfo&>{findFile(std::move(filePathIterator)), getFileInfoRef};
+}
+
+template<typename FileInfo>
+void
+line::core::DirectoryStructure<FileInfo>::insert(FilePathIterator&& filePathIterator, FileInfo&& fileInfo) {
+    updateFilePathCache(filePathIterator);
+    ensurePathExists(
+        filePathCache.isEmpty() ? &rootDir : filePathCache.data(),
+        filePathIterator
+    )->files.insert({line::core::String{filePathIterator.getFileName()}, std::move(fileInfo)});
+}
+
+template<typename FileInfo>
+line::utils::types::ComparsionResult line::core::DirectoryStructure<FileInfo>::strcmpWrappedResult(const char* left, const char* right) noexcept {
+    return line::utils::funcs::integerToComparsionResult(std::strcmp(left, right));
+}
+
+template<typename FileInfo>
+template<typename DirectoryObject>
+line::utils::types::ComparsionResult
+line::core::DirectoryStructure<FileInfo>::compare(const DirectoryObject& left, const DirectoryObject& right) noexcept {
+    assert(!left.name.isEmpty());
+    assert(!right.name.isEmpty());
+    return strcmpWrappedResult(left.name.cString(), right.name.cString());
+}
+
+template<typename FileInfo>
+template<typename DirectoryObject>
+line::utils::types::ComparsionResult
+line::core::DirectoryStructure<FileInfo>::keyCompare(const DirectoryObject& dirObject, const SearchKey& name) noexcept {
+    assert(!dirObject.name.isEmpty());
+    line::core::String::StringSlice left = line::core::String::toStringSlice(dirObject.name);
+    line::core::String::StringSlice right = line::core::String::toStringSlice(name);
+    std::size_t loopLength = std::min(left.count, right.count);
+    for(std::size_t i = 0; i < loopLength; ++i) {
+        line::utils::types::ComparsionResult comparsionResult
+            = line::utils::funcs::integerToComparsionResult(left.beginning[i] - right.beginning[i]);
+        if(comparsionResult != line::utils::types::ComparsionResult::Equal) {
+            return comparsionResult;
+        }
+    }
+    return line::utils::types::ComparsionResult::Equal;
+}
+
+template<typename FileInfo>
+FileInfo&
+line::core::DirectoryStructure<FileInfo>::getFileInfoRef(void* ptr) noexcept {
+    return reinterpret_cast<File*>(ptr)->fileInfo;
+}
+
+template<typename FileInfo>
+const FileInfo&
+line::core::DirectoryStructure<FileInfo>::getFileInfoConstRef(void* ptr) noexcept {
+    return reinterpret_cast<const File*>(ptr)->fileInfo;
+}
+
+template<typename FileInfo>
+typename line::core::DirectoryStructure<FileInfo>::File*
+line::core::DirectoryStructure<FileInfo>::findFile(FilePathIterator&& filePathIterator) noexcept {
+    Directory* dir = &rootDir;
+    while(filePathIterator) {
+        line::utils::types::Optional<Directory&> result = dir->children.find(*filePathIterator);
+        if(!result) {
+            return nullptr;
+        }
+        dir = &result.value();
+        ++filePathIterator;
+    }
+    line::utils::types::Optional<File&> result = dir->files.find(filePathIterator.getFileName());
+    return result ? &result.value() : nullptr;
+}
+
+template<typename FileInfo>
+void
+line::core::DirectoryStructure<FileInfo>::updateFilePathCache(FilePathIterator& filePathIterator) {
+    if(!filePathCache.isEmpty()) {
+        filePathCache.rewind();
+        while(filePathIterator) {
+            if(line::core::String::toStringSlice(filePathCache.data()->name) != (*filePathIterator)) {
+                filePathCache.discard();
+                break;
+            }
+            ++filePathIterator;
+            if(!filePathCache.isAtLast()) {
+                filePathCache.next();
+            } else {
+                break;
+            }
+        }
+    }
+}
+
+template<typename FileInfo>
+typename line::core::DirectoryStructure<FileInfo>::Directory*
+line::core::DirectoryStructure<FileInfo>::ensurePathExists(Directory* parentDir, FilePathIterator& filePathIterator) {
+    Directory* dir = parentDir;
+    while(filePathIterator) {
+        line::utils::types::Optional<Directory&> result = dir->children.find(*filePathIterator);
+        if(result) {
+            dir = &result.value();
+        } else {
+            dir->children.insert(Directory{line::core::String{*filePathIterator}});
+            dir = &(dir->children.find(*filePathIterator).value());
+        }
+        filePathCache.push(dir);
+        ++filePathIterator;
+    }
+    return dir;
+}
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::File::File(const line::core::String& name, const FileInfo& fileInfo)
+: name{name}, fileInfo{fileInfo} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::File::File(line::core::String&& name, const FileInfo& fileInfo)
+: name{std::move(name)}, fileInfo{fileInfo} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::File::File(line::core::String&& name, FileInfo&& fileInfo) noexcept
+: name{std::move(name)}, fileInfo{std::move(fileInfo)} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::File::File(const line::core::String& name, FileInfo&& fileInfo)
+: name{name}, fileInfo{std::move(fileInfo)} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::Directory::Directory(const line::core::String& name)
+: name{name} { }
+
+template<typename FileInfo>
+line::core::DirectoryStructure<FileInfo>::Directory::Directory(line::core::String&& name)
+: name{std::move(name)} { }
