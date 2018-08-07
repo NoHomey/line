@@ -39,7 +39,7 @@ line::core::FilePathIterator::getFileNameAsStringSlice(const line::core::String:
         }
         --index;
     }
-    assert(false);
+    return filePath;
 }
 
 std::size_t line::core::FilePathIterator::findFirstDirectoryDelimiter(const line::core::String::StringSlice& filePath) noexcept {
@@ -49,5 +49,5 @@ std::size_t line::core::FilePathIterator::findFirstDirectoryDelimiter(const line
             return i;
         }
     }
-    assert(false);
+    return filePath.count;
 }
