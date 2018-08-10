@@ -13,9 +13,10 @@ namespace BST {
 template<bool Const, typename Node, typename Data>
 class BSTIterator {
 public:
-    using NodeType = typename std::conditional<Const, const Node, Node>::type;
-
     using DataType = typename std::conditional<Const, const Data, Data>::type;
+
+private:
+    using NodeType = typename std::conditional<Const, const Node, Node>::type;
 
 public:
     BSTIterator() noexcept = default;
