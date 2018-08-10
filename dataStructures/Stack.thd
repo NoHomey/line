@@ -1,0 +1,209 @@
+#pragma once
+
+#include <cstddef>
+
+namespace line {
+
+namespace dataStructures {
+
+template<typename T>
+class Stack {
+public:
+    Stack() noexcept;
+
+    Stack(std::size_t capacity);
+
+    Stack(const Stack& other);
+
+    Stack(Stack&& other) noexcept;
+
+    ~Stack() noexcept;
+
+    Stack& operator=(const Stack& other);
+
+    Stack& operator=(Stack&& other) noexcept;
+
+public:
+    bool isEmpty() const noexcept;
+
+    bool isFull() const noexcept;
+
+    std::size_t size() const noexcept;
+
+    std::size_t capacity() const noexcept;
+
+    const T& top() const noexcept;
+
+public:
+    T& top() noexcept;
+
+    void push(const T& data);
+
+    void push(T&& data);
+
+    void pop() noexcept;
+
+    void clean() noexcept;
+
+private:
+    template<typename Data>
+    void pushData(Data data);
+
+private:
+    T* stackData;
+
+    std::size_t stackSize;
+
+    std::size_t stackCapacity;
+};
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include <cassert>
+#include <utility>
+
+template<typename T>
+line::dataStructures::Stack<T>::Stack() noexcept
+: stackData{nullptr}, stackSize{0}, stackCapacity{0} { }
+
+template<typename T>
+line::dataStructures::Stack<T>::Stack(std::size_t capacity)
+: Stack{} {
+    if(capacity) {
+        stackData = new T[capacity];
+        stackCapacity = capacity;
+    }
+}
+
+template<typename T>
+line::dataStructures::Stack<T>::Stack(const Stack& other)
+: Stack{other.stackCapacity} {
+    for(std::size_t i = 0; i < other.stackSize; ++i) {
+        stackData[i] = other.stackData[i];
+    }
+}
+
+template<typename T>
+line::dataStructures::Stack<T>::Stack(Stack&& other) noexcept
+: stackData{other.stackData}, stackSize{other.stackSize}, stackCapacity{other.stackCapacity} {
+    other.clean();
+}
+
+template<typename T>
+line::dataStructures::Stack<T>::~Stack() noexcept {
+    clean();
+}
+
+template<typename T>
+line::dataStructures::Stack<T>&
+line::dataStructures::Stack<T>::operator=(const Stack& other) {
+    if(this != &other) {
+        Stack copy{other};
+        operator=(std::move(copy));
+    }
+    return *this;
+}
+
+template<typename T>
+line::dataStructures::Stack<T>&
+line::dataStructures::Stack<T>::operator=(Stack&& other) noexcept {
+    if(this != &other) {
+        delete[] stackData;
+        stackData = other.stackData;
+        stackSize = other.stackSize;
+        stackCapacity = other.stackCapacity;
+        other.stackData = nullptr;
+        other.clean();
+    }
+    return *this;
+}
+
+template<typename T>
+bool
+line::dataStructures::Stack<T>::isEmpty() const noexcept {
+    return !stackSize;
+}
+
+template<typename T>
+bool
+line::dataStructures::Stack<T>::isFull() const noexcept {
+    return stackSize == stackCapacity;
+}
+
+template<typename T>
+std::size_t
+line::dataStructures::Stack<T>::size() const noexcept {
+    return stackSize;
+}
+
+template<typename T>
+std::size_t
+line::dataStructures::Stack<T>::capacity() const noexcept {
+    return stackCapacity;
+}
+
+template<typename T>
+const T&
+line::dataStructures::Stack<T>::top() const noexcept {
+    assert(!isEmpty());
+    return stackData[stackSize - 1];
+}
+
+template<typename T>
+T&
+line::dataStructures::Stack<T>::top() noexcept {
+    assert(!isEmpty());
+    return stackData[stackSize - 1];
+}
+
+template<typename T>
+void
+line::dataStructures::Stack<T>::push(const T& data) {
+    pushData<const T&>(data);
+}
+
+template<typename T>
+void
+line::dataStructures::Stack<T>::push(T&& data) {
+    pushData<T&&>(std::move(data));
+}
+
+template<typename T>
+void
+line::dataStructures::Stack<T>::pop() noexcept {
+    assert(!isEmpty());
+    --stackSize;
+}
+
+template<typename T>
+void
+line::dataStructures::Stack<T>::clean() noexcept {
+    delete[] stackData;
+    stackData = nullptr;
+    stackSize = 0;
+    stackCapacity = 0;
+}
+
+template<typename T>
+template<typename Data>
+void
+line::dataStructures::Stack<T>::pushData(Data data) {
+    if(isFull()) {
+        std::size_t newCapacity = stackCapacity ? stackCapacity * 2 : 2;
+        T* tmp = new T[newCapacity];
+        for(std::size_t i = 0; i < stackCapacity; ++i) {
+            tmp[i] = stackData[i];
+        }
+        delete[] stackData;
+        stackData = tmp;
+        stackCapacity = newCapacity;
+    }
+    stackData[stackSize] = std::forward<Data>(data);
+    ++stackSize;
+}

@@ -1,0 +1,93 @@
+#pragma once
+
+#include "./BST.thd"
+#include "../Stack.thd"
+
+namespace line {
+
+namespace dataStructures {
+
+namespace BST {
+    
+template<typename Node, typename Data>
+class BSTIterator {
+public:
+    BSTIterator() noexcept = default;
+
+    BSTIterator(Node* root, std::size_t height);
+
+    BSTIterator(const BSTIterator& other) = default;
+
+    BSTIterator(BSTIterator&& other) noexcept = default;
+
+    ~BSTIterator() noexcept = default;
+
+    BSTIterator& operator=(const BSTIterator& other) = default;
+
+    BSTIterator& operator=(BSTIterator&& other) noexcept = default;
+
+public:
+    operator bool() const noexcept;
+
+    const Data& operator*() const noexcept;
+
+public:
+    Data& operator*() noexcept;
+
+    BSTIterator& operator++();
+
+private:
+    void moveLeft(Node* node);
+
+private:
+    line::dataStructures::Stack<Node*> stack;
+};
+
+}
+
+}
+
+}
+
+template<typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Node, Data>::BSTIterator(Node* root, std::size_t height)
+: stack{height} {
+    moveLeft(root);
+}
+
+template<typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Node, Data>::operator bool() const noexcept {
+    return !stack.isEmpty();
+}
+
+template<typename Node, typename Data>
+const Data&
+line::dataStructures::BST::BSTIterator<Node, Data>::operator*() const noexcept {
+    return stack.top()->data;
+}
+
+template<typename Node, typename Data>
+Data&
+line::dataStructures::BST::BSTIterator<Node, Data>::operator*() noexcept {
+    return stack.top()->data;
+}
+
+template<typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Node, Data>&
+line::dataStructures::BST::BSTIterator<Node, Data>::operator++() {
+    if(!stack.isEmpty()) {
+        Node* top = stack.top();
+        stack.pop();
+        moveLeft(top->rightNode());
+    }
+    return *this;
+}
+
+template<typename Node, typename Data>
+void
+line::dataStructures::BST::BSTIterator<Node, Data>::moveLeft(Node* node) {
+    while(node) {
+        stack.push(node);
+        node = node->leftNode();
+    }
+}

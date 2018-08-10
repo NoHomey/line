@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./BST.thd"
+#include "./BSTIterator.thd"
 #include "../../utils/types/Compare.thd"
 #include "../../utils/types/Optional.thd"
 
@@ -43,6 +44,16 @@ public:
 
 private:
     class Node;
+
+public:
+    using ConstIterator = line::dataStructures::BST::BSTIterator<const Node, const T>;
+
+    ConstIterator constIterator() const;
+
+public:
+    using Iterator = line::dataStructures::BST::BSTIterator<Node, T>;
+
+    Iterator iterator();
 
 private:
     static std::size_t height(const Node* node) noexcept;
@@ -199,6 +210,18 @@ line::utils::types::Optional<T&>
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::find(const Key& key) noexcept {
     Node* node = BST::find<Node, T, Key, keyCompare>(root, key);
     return line::utils::types::Optional<T&>{node, extractRef};
+}
+
+template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+typename line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::ConstIterator
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::constIterator() const {
+    return {root, height(root)};
+}
+
+template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+typename line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::Iterator
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::iterator() {
+    return {root, height(root)};
 }
 
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>

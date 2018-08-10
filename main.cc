@@ -1,4 +1,4 @@
-#include <iostream>
+/*#include <iostream>
 #include "./core/DirectoryStructure.thd"
 #include "./core/String/String.h"
 
@@ -65,5 +65,44 @@ int main() {
         }
     }
     
+    return 0;
+}*/
+
+#include <iostream>
+#include "./dataStructures/BST/AVLTree.thd"
+#include "./utils/funcs/integerToComparsionResult.thd"
+
+line::utils::types::ComparsionResult compare(const int&a, const int& b) {
+    return line::utils::funcs::integerToComparsionResult(a - b);
+}
+
+int main() {
+    line::dataStructures::BST::AVLTree<int, int, compare, compare> tree;
+
+    for(int i = 1; i < 32; ++i) {
+        tree.insert(i);
+    }
+
+    line::dataStructures::BST::AVLTree<int, int, compare, compare>::ConstIterator iter = tree.constIterator();
+
+    while(iter) {
+        std::cout << *iter << std::endl;
+        ++iter;
+    }
+
+    line::dataStructures::BST::AVLTree<int, int, compare, compare>::Iterator iterator = tree.iterator();
+
+    while(iterator) {
+        ++(*iterator);
+        ++iterator;
+    }
+
+    iter = tree.constIterator();
+
+    while(iter) {
+        std::cout << *iter << std::endl;
+        ++iter;
+    }
+
     return 0;
 }
