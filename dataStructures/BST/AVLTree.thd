@@ -46,12 +46,16 @@ private:
     class Node;
 
 public:
-    using ConstIterator = line::dataStructures::BST::BSTIterator<const Node, const T>;
+    template<bool Const>
+    using AVLTreeIterator = line::dataStructures::BST::BSTIterator<Const, Node, T>;
+
+public:
+    using ConstIterator = AVLTreeIterator<true>;
 
     ConstIterator constIterator() const;
 
 public:
-    using Iterator = line::dataStructures::BST::BSTIterator<Node, T>;
+    using Iterator = AVLTreeIterator<false>;
 
     Iterator iterator();
 

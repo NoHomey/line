@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #include "./BST.thd"
 #include "../Stack.thd"
 
@@ -9,12 +10,17 @@ namespace dataStructures {
 
 namespace BST {
     
-template<typename Node, typename Data>
+template<bool Const, typename Node, typename Data>
 class BSTIterator {
+public:
+    using NodeType = typename std::conditional<Const, const Node, Node>::type;
+
+    using DataType = typename std::conditional<Const, const Data, Data>::type;
+
 public:
     BSTIterator() noexcept = default;
 
-    BSTIterator(Node* root, std::size_t height);
+    BSTIterator(NodeType* root, std::size_t height);
 
     BSTIterator(const BSTIterator& other) = default;
 
@@ -32,15 +38,15 @@ public:
     const Data& operator*() const noexcept;
 
 public:
-    Data& operator*() noexcept;
+    DataType& operator*() noexcept;
 
     BSTIterator& operator++();
 
 private:
-    void moveLeft(Node* node);
+    void moveLeft(NodeType* node);
 
 private:
-    line::dataStructures::Stack<Node*> stack;
+    line::dataStructures::Stack<NodeType*> stack;
 };
 
 }
@@ -49,43 +55,43 @@ private:
 
 }
 
-template<typename Node, typename Data>
-line::dataStructures::BST::BSTIterator<Node, Data>::BSTIterator(Node* root, std::size_t height)
+template<bool Const, typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::BSTIterator(NodeType* root, std::size_t height)
 : stack{height} {
     moveLeft(root);
 }
 
-template<typename Node, typename Data>
-line::dataStructures::BST::BSTIterator<Node, Data>::operator bool() const noexcept {
+template<bool Const, typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::operator bool() const noexcept {
     return !stack.isEmpty();
 }
 
-template<typename Node, typename Data>
+template<bool Const, typename Node, typename Data>
 const Data&
-line::dataStructures::BST::BSTIterator<Node, Data>::operator*() const noexcept {
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::operator*() const noexcept {
     return stack.top()->data;
 }
 
-template<typename Node, typename Data>
-Data&
-line::dataStructures::BST::BSTIterator<Node, Data>::operator*() noexcept {
+template<bool Const, typename Node, typename Data>
+typename line::dataStructures::BST::BSTIterator<Const, Node, Data>::DataType&
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::operator*() noexcept {
     return stack.top()->data;
 }
 
-template<typename Node, typename Data>
-line::dataStructures::BST::BSTIterator<Node, Data>&
-line::dataStructures::BST::BSTIterator<Node, Data>::operator++() {
+template<bool Const, typename Node, typename Data>
+line::dataStructures::BST::BSTIterator<Const ,Node, Data>&
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::operator++() {
     if(!stack.isEmpty()) {
-        Node* top = stack.top();
+        NodeType* top = stack.top();
         stack.pop();
         moveLeft(top->rightNode());
     }
     return *this;
 }
 
-template<typename Node, typename Data>
+template<bool Const, typename Node, typename Data>
 void
-line::dataStructures::BST::BSTIterator<Node, Data>::moveLeft(Node* node) {
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::moveLeft(NodeType* node) {
     while(node) {
         stack.push(node);
         node = node->leftNode();

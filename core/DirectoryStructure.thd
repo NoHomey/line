@@ -74,13 +74,13 @@ struct File {
 
     File() noexcept = default;
 
-    File(const line::core::String& name, const FileInfo& fileInfo);
+    File(const Name& name, const FileInfo& fileInfo);
 
-    File(line::core::String&& name, const FileInfo& fileInfo);
+    File(Name&& name, const FileInfo& fileInfo);
 
-    File(line::core::String&& name, FileInfo&& fileInfo) noexcept;
+    File(Name&& name, FileInfo&& fileInfo) noexcept;
 
-    File(const line::core::String& name, FileInfo&& fileInfo);
+    File(const Name& name, FileInfo&& fileInfo);
 
     File(const File& other) = default;
 
@@ -107,9 +107,9 @@ struct Directory {
 
     Directory() noexcept = default;
 
-    Directory(const line::core::String& name);
+    Directory(const Name& name);
 
-    Directory(line::core::String&& name);
+    Directory(Name&& name);
 
     Directory(const Directory& other) = delete;
 
@@ -280,25 +280,25 @@ line::core::DirectoryStructure<FileInfo>::ensurePathExists(Directory* parentDir,
 }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::File::File(const line::core::String& name, const FileInfo& fileInfo)
+line::core::DirectoryStructure<FileInfo>::File::File(const Name& name, const FileInfo& fileInfo)
 : name{name}, fileInfo{fileInfo} { }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::File::File(line::core::String&& name, const FileInfo& fileInfo)
+line::core::DirectoryStructure<FileInfo>::File::File(Name&& name, const FileInfo& fileInfo)
 : name{std::move(name)}, fileInfo{fileInfo} { }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::File::File(line::core::String&& name, FileInfo&& fileInfo) noexcept
+line::core::DirectoryStructure<FileInfo>::File::File(Name&& name, FileInfo&& fileInfo) noexcept
 : name{std::move(name)}, fileInfo{std::move(fileInfo)} { }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::File::File(const line::core::String& name, FileInfo&& fileInfo)
+line::core::DirectoryStructure<FileInfo>::File::File(const Name& name, FileInfo&& fileInfo)
 : name{name}, fileInfo{std::move(fileInfo)} { }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::Directory::Directory(const line::core::String& name)
+line::core::DirectoryStructure<FileInfo>::Directory::Directory(const Name& name)
 : name{name} { }
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::Directory::Directory(line::core::String&& name)
+line::core::DirectoryStructure<FileInfo>::Directory::Directory(Name&& name)
 : name{std::move(name)} { }

@@ -34,8 +34,12 @@ public:
 
     const T& top() const noexcept;
 
+    const T* data() const noexcept;
+
 public:
     T& top() noexcept;
+
+    T* data() noexcept;
 
     void push(const T& data);
 
@@ -156,10 +160,22 @@ line::dataStructures::Stack<T>::top() const noexcept {
 }
 
 template<typename T>
+const T*
+line::dataStructures::Stack<T>::data() const noexcept {
+    return stackData;
+}
+
+template<typename T>
 T&
 line::dataStructures::Stack<T>::top() noexcept {
     assert(!isEmpty());
     return stackData[stackSize - 1];
+}
+
+template<typename T>
+T*
+line::dataStructures::Stack<T>::data() noexcept {
+    return stackData;
 }
 
 template<typename T>
