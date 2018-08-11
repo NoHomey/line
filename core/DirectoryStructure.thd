@@ -190,7 +190,19 @@ private:
     static typename Directory::Children::Iterator iterator(Directory* dirPtr);
 
 private:
+    void addName(const Name& name);
+
+    void addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator);
+
+    void removeName(const Name& name);
+
+    void removeLastDirectory();
+
     void moveDown(DirectoryPtr dirPtr);
+
+    bool moveToNextDirectory();
+
+    void changeDirectory();
 
 private:
     line::dataStructures::Stack<IterationState> directoryPath;
@@ -423,45 +435,13 @@ template<typename FileInfo>
 template<bool Const>
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>&
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator++() {
-    std::size_t fileNameLength = (*fileIterator).name.length();
-    for(std::size_t i = 0; i < fileNameLength; ++i) {
-        filePath.pop();
-    }
+    removeName((*fileIterator).name);
     ++fileIterator;
     if(fileIterator) {
-        std::size_t fileNameLength = (*fileIterator).name.length();
-        const char* fileNameData = (*fileIterator).name.cString();
-        for(std::size_t i = 0; i < fileNameLength; ++i) {
-            filePath.push(fileNameData[i]);
-        }
+        addName((*fileIterator).name);
     }
     else {
-        while(!directoryPath.isEmpty()) {
-            DirectoryChildrenIterator iter = iterator(directoryPath.top().first);
-            std::size_t& increments = directoryPath.top().second;
-            for(std::size_t i = 0; i < increments; ++i) {
-                ++iter;
-            }
-            if(iter) {
-                ++increments;
-                std::size_t dirNameLength = (*iter).name.length();
-                const char* dirNameData = (*iter).name.cString();
-                for(std::size_t i = 0; i < dirNameLength; ++i) {
-                    filePath.push(dirNameData[i]);
-                }
-                filePath.push('/');
-                moveDown(&(*iter));
-                break;
-            }
-            if(!filePath.isEmpty()) {
-                filePath.pop();
-                std::size_t pops = directoryPath.top().first->name.length();
-                for(std::size_t i = 0; i < pops; ++i) {
-                    filePath.pop();
-                }
-            }
-            directoryPath.pop();
-        }
+        changeDirectory();
     }
     return *this;
 }
@@ -498,24 +478,85 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(
 template<typename FileInfo>
 template<bool Const>
 void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addName(const Name& name) {
+    std::size_t nameLength = name.length();
+    const char* nameData = name.cString();
+    for(std::size_t i = 0; i < nameLength; ++i) {
+        filePath.push(nameData[i]);
+    }
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator) {
+    addName((*directoryChildrenIterator).name);
+    filePath.push('/');
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeName(const Name& name) {
+    std::size_t pops = name.length();
+    for(std::size_t i = 0; i < pops; ++i) {
+        filePath.pop();
+    }
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeLastDirectory() {
+    if(!filePath.isEmpty()) {
+        filePath.pop();
+        removeName(directoryPath.top().first->name);
+    }
+    directoryPath.pop();
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveDown(DirectoryPtr dirPtr) {
     directoryPath.push({dirPtr, 0});
     while(dirPtr->files.isEmpty()) {
         ++(directoryPath.top().second);
         DirectoryChildrenIterator iter = iterator(dirPtr);
-        std::size_t dirNameLength = (*iter).name.length();
-        const char* dirNameData = (*iter).name.cString();
-        for(std::size_t i = 0; i < dirNameLength; ++i) {
-            filePath.push(dirNameData[i]);
-        }
-        filePath.push('/');
+        addDirectoryName(iter);
         dirPtr = &(*iter);
         directoryPath.push({dirPtr, 0});
     }
     fileIterator = iterator(dirPtr->files);
-    std::size_t fileNameLength = (*fileIterator).name.length();
-    const char* fileNameData = (*fileIterator).name.cString();
-    for(std::size_t i = 0; i < fileNameLength; ++i) {
-        filePath.push(fileNameData[i]);
+    addName((*fileIterator).name);
+}
+
+template<typename FileInfo>
+template<bool Const>
+bool
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveToNextDirectory() {
+    DirectoryChildrenIterator iter = iterator(directoryPath.top().first);
+    std::size_t& increments = directoryPath.top().second;
+    for(std::size_t i = 0; i < increments; ++i) {
+        ++iter;
+    }
+    if(iter) {
+        ++increments;
+        addDirectoryName(iter);
+        moveDown(&(*iter));
+        return true;
+    }
+    return false;
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::changeDirectory() {
+    while(!directoryPath.isEmpty()) {
+        if(moveToNextDirectory()) {
+            break;
+        }
+        removeLastDirectory();
     }
 }
