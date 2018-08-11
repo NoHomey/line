@@ -171,7 +171,8 @@ void
 line::dataStructures::RDStack<T>::push(Data data) {
     if(isEmpty()) {
         head = current = new Node{std::forward<Data>(data)};
+    } else {
+        assert(isAtLast());
+        current = DoublyLinkedList::insertAfter(current, data);
     }
-    assert(isAtLast());
-    current = DoublyLinkedList::insertAfter(current, data);
 }

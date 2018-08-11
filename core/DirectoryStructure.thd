@@ -7,6 +7,7 @@
 #include "../utils/types/Optional.thd"
 #include "./String/String.h"
 #include "./FilePathIterator/FilePathIterator.h"
+#include <utility>
 
 namespace line {
 
@@ -40,6 +41,20 @@ public:
     line::utils::types::Optional<FileInfo&> find(FilePathIterator&& filePathIterator) noexcept;
 
     void insert(FilePathIterator&& filePathIterator, FileInfo&& fileInfo);
+
+private:
+    template<bool Const>
+    class InternalFileIterator;
+
+public:
+    using ConstFileIterator = InternalFileIterator<true>;
+
+    ConstFileIterator constFileIterator() const;
+
+public:
+    using FileIterator = InternalFileIterator<false>;
+
+    FileIterator fileIterator();
     
 private:
     struct File;
@@ -122,6 +137,67 @@ struct Directory {
     Directory& operator=(Directory&& other) noexcept = delete;
 };
 
+template<bool Const>
+class InternalFileIterator {
+private:
+    using FileIterator = typename Directory::Files::template DataIterator<Const>;
+
+    using DirectoryChildrenIterator = typename Directory::Children::template DataIterator<Const>;
+
+    using DirectoryPtr = typename DirectoryChildrenIterator::DataType*;
+
+    using IterationState = std::pair<DirectoryPtr, std::size_t>;
+
+public:
+    using FileInfoData = typename std::conditional<Const, const FileInfo, FileInfo>::type;
+
+    using Data = std::pair<line::core::String::StringSlice, FileInfoData&>;
+
+    using ConstData = std::pair<line::core::String::StringSlice, const FileInfo&>;
+
+public:
+    InternalFileIterator() noexcept = default;
+
+    InternalFileIterator(DirectoryPtr rootDirPtr);
+
+    InternalFileIterator(const InternalFileIterator& other) = default;
+
+    InternalFileIterator(InternalFileIterator&& other) noexcept = default;
+
+    ~InternalFileIterator() noexcept = default;
+
+    InternalFileIterator& operator=(const InternalFileIterator& other) = default;
+
+    InternalFileIterator& operator=(InternalFileIterator&& other) noexcept = default;
+
+public:
+    operator bool() const noexcept;
+
+    ConstData operator*() const noexcept;
+
+public:
+    Data operator*() noexcept;
+
+    InternalFileIterator& operator++();
+
+private:
+    static typename Directory::Files::ConstIterator iterator(const typename Directory::Files& files);
+
+    static typename Directory::Files::Iterator iterator(typename Directory::Files& files);
+
+    static typename Directory::Children::ConstIterator iterator(const Directory* dirPtr);
+
+    static typename Directory::Children::Iterator iterator(Directory* dirPtr);
+
+private:
+    void moveDown(DirectoryPtr dirPtr);
+
+private:
+    line::dataStructures::Stack<IterationState> directoryPath;
+    line::dataStructures::Stack<char> filePath;
+    FileIterator fileIterator;
+};
+
 private:
     line::core::String rootDirPath;
     Directory rootDir;
@@ -179,6 +255,18 @@ line::core::DirectoryStructure<FileInfo>::insert(FilePathIterator&& filePathIter
         filePathCache.isEmpty() ? &rootDir : filePathCache.data(),
         filePathIterator
     )->files.insert({line::core::String{filePathIterator.getFileName()}, std::move(fileInfo)});
+}
+
+template<typename FileInfo>
+typename line::core::DirectoryStructure<FileInfo>::ConstFileIterator
+line::core::DirectoryStructure<FileInfo>::constFileIterator() const {
+    return {&rootDir};
+}
+
+template<typename FileInfo>
+typename line::core::DirectoryStructure<FileInfo>::FileIterator
+line::core::DirectoryStructure<FileInfo>::fileIterator() {
+    return {&rootDir};
 }
 
 template<typename FileInfo>
@@ -249,15 +337,16 @@ line::core::DirectoryStructure<FileInfo>::updateFilePathCache(FilePathIterator& 
         while(filePathIterator) {
             if(line::core::String::toStringSlice(filePathCache.data()->name) != (*filePathIterator)) {
                 filePathCache.discard();
-                break;
+                return;
             }
             ++filePathIterator;
             if(!filePathCache.isAtLast()) {
                 filePathCache.next();
             } else {
-                break;
+                return;
             }
         }
+        filePathCache.discard();
     }
 }
 
@@ -302,3 +391,131 @@ line::core::DirectoryStructure<FileInfo>::Directory::Directory(const Name& name)
 template<typename FileInfo>
 line::core::DirectoryStructure<FileInfo>::Directory::Directory(Name&& name)
 : name{std::move(name)} { }
+
+template<typename FileInfo>
+template<bool Const>
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(DirectoryPtr rootDirPtr)
+: InternalFileIterator{} {
+    moveDown(rootDirPtr);
+}
+
+template<typename FileInfo>
+template<bool Const>
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator bool() const noexcept {
+    return !directoryPath.isEmpty();
+}
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::ConstData
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() const noexcept {
+    return {line::core::String::StringSlice{filePath.data(), filePath.size()}, (*fileIterator).fileInfo};
+}
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::Data
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() noexcept {
+    return {line::core::String::StringSlice{filePath.data(), filePath.size()}, (*fileIterator).fileInfo};
+}
+
+template<typename FileInfo>
+template<bool Const>
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>&
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator++() {
+    std::size_t fileNameLength = (*fileIterator).name.length();
+    for(std::size_t i = 0; i < fileNameLength; ++i) {
+        filePath.pop();
+    }
+    ++fileIterator;
+    if(fileIterator) {
+        std::size_t fileNameLength = (*fileIterator).name.length();
+        const char* fileNameData = (*fileIterator).name.cString();
+        for(std::size_t i = 0; i < fileNameLength; ++i) {
+            filePath.push(fileNameData[i]);
+        }
+    }
+    else {
+        while(!directoryPath.isEmpty()) {
+            DirectoryChildrenIterator iter = iterator(directoryPath.top().first);
+            std::size_t& increments = directoryPath.top().second;
+            for(std::size_t i = 0; i < increments; ++i) {
+                ++iter;
+            }
+            if(iter) {
+                ++increments;
+                std::size_t dirNameLength = (*iter).name.length();
+                const char* dirNameData = (*iter).name.cString();
+                for(std::size_t i = 0; i < dirNameLength; ++i) {
+                    filePath.push(dirNameData[i]);
+                }
+                filePath.push('/');
+                moveDown(&(*iter));
+                break;
+            }
+            if(!filePath.isEmpty()) {
+                filePath.pop();
+                std::size_t pops = directoryPath.top().first->name.length();
+                for(std::size_t i = 0; i < pops; ++i) {
+                    filePath.pop();
+                }
+            }
+            directoryPath.pop();
+        }
+    }
+    return *this;
+}
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::Directory::Files::ConstIterator
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(const typename Directory::Files& files) {
+    return files.constIterator();
+}
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::Directory::Files::Iterator
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(typename Directory::Files& files) {
+    return files.iterator();
+}
+
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::Directory::Children::ConstIterator
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(const Directory* dirPtr) {
+    return dirPtr->children.constIterator();
+}
+
+template<typename FileInfo>
+template<bool Const>
+typename line::core::DirectoryStructure<FileInfo>::Directory::Children::Iterator
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(Directory* dirPtr) {
+    return dirPtr->children.iterator();
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveDown(DirectoryPtr dirPtr) {
+    directoryPath.push({dirPtr, 0});
+    while(dirPtr->files.isEmpty()) {
+        ++(directoryPath.top().second);
+        DirectoryChildrenIterator iter = iterator(dirPtr);
+        std::size_t dirNameLength = (*iter).name.length();
+        const char* dirNameData = (*iter).name.cString();
+        for(std::size_t i = 0; i < dirNameLength; ++i) {
+            filePath.push(dirNameData[i]);
+        }
+        filePath.push('/');
+        dirPtr = &(*iter);
+        directoryPath.push({dirPtr, 0});
+    }
+    fileIterator = iterator(dirPtr->files);
+    std::size_t fileNameLength = (*fileIterator).name.length();
+    const char* fileNameData = (*fileIterator).name.cString();
+    for(std::size_t i = 0; i < fileNameLength; ++i) {
+        filePath.push(fileNameData[i]);
+    }
+}

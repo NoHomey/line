@@ -10,7 +10,7 @@ line::core::String::StringSlice::StringSlice(const char* beginning, std::size_t 
 }
 
 bool line::core::String::StringSlice::operator==(const StringSlice& other) const noexcept {
-    return (count == other.count) && std::memcmp(beginning, other.beginning, count);
+    return (count == other.count) && (!std::memcmp(beginning, other.beginning, count));
 }
 
 bool line::core::String::StringSlice::operator!=(const StringSlice& other) const noexcept {

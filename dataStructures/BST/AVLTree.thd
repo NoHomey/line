@@ -47,15 +47,15 @@ private:
 
 public:
     template<bool Const>
-    using AVLTreeIterator = line::dataStructures::BST::BSTIterator<Const, Node, T>;
+    using DataIterator = line::dataStructures::BST::BSTIterator<Const, Node, T>;
 
 public:
-    using ConstIterator = AVLTreeIterator<true>;
+    using ConstIterator = DataIterator<true>;
 
     ConstIterator constIterator() const;
 
 public:
-    using Iterator = AVLTreeIterator<false>;
+    using Iterator = DataIterator<false>;
 
     Iterator iterator();
 
@@ -193,7 +193,7 @@ line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::~AVLTree() noex
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 bool
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::isEmpty() const noexcept {
-    return isEmpty(root);
+    return BST::isEmpty(root);
 }
 
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>

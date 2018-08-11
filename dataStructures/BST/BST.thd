@@ -136,13 +136,12 @@ line::dataStructures::BST::internal::insert(Node* root, Data data) {
         case ComparsionResult::Equal: return root;
         case ComparsionResult::Less:
             root->rightNode() = internal::insert<Node, T, Data, routine, compare>(root->rightNode(), std::forward<Data>(data));
-            break;
+            return routine(root, root->rightNode()->data);
         case ComparsionResult::Greater:
             root->leftNode() = internal::insert<Node, T, Data, routine, compare>(root->leftNode(), std::forward<Data>(data));
-            break;
+            return routine(root, root->leftNode()->data);
         default: assert(false);
     }
-    return routine(root, data);
 }
 
 template<typename Node, typename T, Node* (*routine) (Node*, const T&), line::utils::types::Compare<T> compare>
