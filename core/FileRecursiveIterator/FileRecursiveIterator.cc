@@ -14,9 +14,10 @@ line::core::FileRecursiveIterator::FileRecursiveIterator(const char* directory)
     int error = readCurrentDirectory(ignoreSpecialEntriesAndLineInfoDirectory);
     if(error) {
         // handle
-        return;
+        filePath.clean();
+    } else {
+        walkUntilFileIsReached();
     }
-    walkUntilFileIsReached();
 }
 
 line::core::FileRecursiveIterator::operator bool() const noexcept {
