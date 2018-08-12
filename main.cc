@@ -1,4 +1,4 @@
-#include <iostream>
+/*#include <iostream>
 #include "./core/DirectoryStructure.thd"
 #include "./core/String/String.h"
 
@@ -124,7 +124,7 @@ int main() {
     }
     
     return 0;
-}
+}*/
 
 /*#include <iostream>
 #include "./dataStructures/BST/AVLTree.thd"
@@ -164,3 +164,19 @@ int main() {
 
     return 0;
 }*/
+
+#include <iostream>
+#include "./core/FileRecursiveIterator/FileRecursiveIterator.h"
+
+int main() {
+
+    line::core::FileRecursiveIterator iter{"."};
+
+    while(iter) {
+        std::cout << (*iter).beginning << std::endl;
+        ++iter;
+    }
+
+
+    return 0;
+}

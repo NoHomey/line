@@ -1,0 +1,262 @@
+#pragma once
+
+namespace line {
+
+namespace dataStructures {
+
+template<typename T>
+class SinglyLinkedList {
+public:
+    SinglyLinkedList() noexcept;
+
+    SinglyLinkedList(const SinglyLinkedList& other);
+
+    SinglyLinkedList(SinglyLinkedList&& other) noexcept;
+
+    ~SinglyLinkedList() noexcept;
+
+    SinglyLinkedList& operator=(const SinglyLinkedList& other);
+
+    SinglyLinkedList& operator=(SinglyLinkedList&& other) noexcept;
+
+public:
+    bool isEmpty() const noexcept;
+
+    const T& first() const noexcept;
+
+    const T& last() const noexcept;
+
+public:
+    T& first() noexcept;
+
+    T& last() noexcept;
+
+    void prepend(const T& data);
+
+    void prepend(T&& data);
+
+    void append(const T& data);
+
+    void append(T&& data);
+
+    void popFirst() noexcept;
+
+    void clean() noexcept;
+
+private:
+    struct Node;
+
+    void prepend(Node* node) noexcept;
+
+    void append(Node* node) noexcept;
+
+    void copy(const SinglyLinkedList& other);
+
+private:
+    struct Node {
+        T data;
+        Node* next;
+
+        Node() noexcept;
+
+        Node(const T& data);
+
+        Node(T&& data) noexcept;
+
+        Node(const Node& other) = delete;
+
+        Node(Node&& other) noexcept = delete;
+
+        ~Node() noexcept = default;
+
+        Node& operator=(const Node& other) = delete;
+
+        Node& operator=(Node&& other) noexcept = delete;
+    };
+
+private:
+    Node* head;
+    Node* tail;
+};
+
+}
+
+}
+
+
+// IMPLEMENTATION
+
+
+#include <cassert>
+#include <utility>
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::SinglyLinkedList() noexcept
+: head{nullptr}, tail{nullptr} { }
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::SinglyLinkedList(const SinglyLinkedList& other)
+: SinglyLinkedList{} {
+    copy(other);
+}
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::SinglyLinkedList(SinglyLinkedList&& other) noexcept
+: head{other.head}, tail{other.tail} {
+    other.head = nullptr;
+    other.tail = nullptr;
+}
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::~SinglyLinkedList() noexcept {
+    clean();
+}
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>&
+line::dataStructures::SinglyLinkedList<T>::operator=(const SinglyLinkedList& other) {
+    if(this != &other) {
+        SinglyLinkedList copy{other};
+        clean();
+        operator=(std::move(copy));
+    }
+    return *this;
+}
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>&
+line::dataStructures::SinglyLinkedList<T>::operator=(SinglyLinkedList&& other) noexcept {
+    if(this != &other) {
+        clean();
+        head = other.head;
+        tail = other.tail;
+        other.head = nullptr;
+        other.tail = nullptr;
+    }
+    return *this;
+}
+
+template<typename T>
+bool
+line::dataStructures::SinglyLinkedList<T>::isEmpty() const noexcept {
+    return !head;
+}
+
+template<typename T>
+const T&
+line::dataStructures::SinglyLinkedList<T>::first() const noexcept {
+    assert(!isEmpty());
+    return head->data;
+}
+
+template<typename T>
+const T&
+line::dataStructures::SinglyLinkedList<T>::last() const noexcept {
+    assert(!isEmpty());
+    return tail->data;
+}
+
+template<typename T>
+T&
+line::dataStructures::SinglyLinkedList<T>::first() noexcept {
+    assert(!isEmpty());
+    return head->data;
+}
+
+template<typename T>
+T&
+line::dataStructures::SinglyLinkedList<T>::last() noexcept {
+    assert(!isEmpty());
+    return tail->data;
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::prepend(const T& data) {
+    prepend(new Node{data});
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::prepend(T&& data) {
+    prepend(new Node{std::move(data)});
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::append(const T& data) {
+    append(new Node{data});
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::append(T&& data) {
+    append(new Node{std::move(data)});
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::popFirst() noexcept {
+    assert(!isEmpty());
+    Node* tmp = head;
+    head = head->next;
+    delete tmp;
+    if(!head) {
+        tail = nullptr;
+    }
+}
+
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::clean() noexcept {
+    while(head) {
+        Node* tmp = head;
+        head = head->next;
+        delete tmp;
+    }
+    tail = nullptr;
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::prepend(Node* node) noexcept {
+    if(isEmpty()) {
+        head = tail = node;
+    } else {
+        node->next = head;
+        head = node;
+    }
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::append(Node* node) noexcept {
+    if(isEmpty()) {
+        head = tail = node;
+    } else {
+        tail->next = node;
+        tail = node;
+    }
+}
+
+template<typename T>
+void
+line::dataStructures::SinglyLinkedList<T>::copy(const SinglyLinkedList& other) {
+    clean();
+    for(Node* iter = other.head; iter; iter = iter->next) {
+        append(iter->data);
+    }
+}
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::Node::Node() noexcept
+: data{}, next{nullptr} { }
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::Node::Node(const T& data)
+: data{data}, next{nullptr} { }
+
+template<typename T>
+line::dataStructures::SinglyLinkedList<T>::Node::Node(T&& data) noexcept
+: data{std::move(data)}, next{nullptr} { }
