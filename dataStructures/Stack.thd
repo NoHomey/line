@@ -214,7 +214,7 @@ line::dataStructures::Stack<T>::pushData(Data data) {
         std::size_t newCapacity = stackCapacity ? stackCapacity * 2 : 2;
         T* tmp = new T[newCapacity];
         for(std::size_t i = 0; i < stackCapacity; ++i) {
-            tmp[i] = stackData[i];
+            tmp[i] = std::move(stackData[i]);
         }
         delete[] stackData;
         stackData = tmp;
