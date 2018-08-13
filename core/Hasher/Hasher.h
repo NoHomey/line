@@ -25,9 +25,13 @@ public:
 
     Hash(const Hash& other) noexcept = default;
 
+    Hash(Hash&& other) noexcept = default;
+
     ~Hash() noexcept = default;
 
     Hash& operator=(const Hash& other) noexcept = default;
+
+    Hash& operator=(Hash&& other) noexcept = default;
 
 public:
     const unsigned char* hash() const noexcept;
