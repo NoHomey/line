@@ -4,7 +4,11 @@ COMPILER = g++ -std=c++14 -Wall -Wextra -Wpedantic -g
 
 Executable = line
 
-Objects = Hasher FileRecursiveIterator FilePathIterator String
+CoreObjects = Hasher FileRecursiveIterator FilePathIterator String
+
+CliObjects = init
+
+Objects = $(CliObjects) $(CoreObjects)
 
 LibCrypto = -I./ssl/include ./ssl/lib/libcrypto.a
 
@@ -20,6 +24,8 @@ build: line
 
 core = ./core
 
+cli = ./cli
+
 $(eval $(call Object,$(core),String))
 
 $(eval $(call Object,$(core),FilePathIterator,String))
@@ -27,6 +33,8 @@ $(eval $(call Object,$(core),FilePathIterator,String))
 $(eval $(call Object,$(core),FileRecursiveIterator,String))
 
 $(eval $(call Object,$(core),Hasher))
+
+$(eval $(call Object,$(cli),init))
 
 clean:
 	rm -f *.o ./$(Executable)
