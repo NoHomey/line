@@ -138,6 +138,8 @@ struct Directory {
 template<bool Const>
 class InternalFileIterator {
 private:
+    using DirectoryStructureType = typename std::conditional<Const, const DirectoryStructure, DirectoryStructure>::type;
+
     using FileIterator = typename Directory::Files::template DataIterator<Const>;
 
     using DirectoryChildrenIterator = typename Directory::Children::template DataIterator<Const>;
@@ -156,7 +158,7 @@ public:
 public:
     InternalFileIterator() noexcept = default;
 
-    InternalFileIterator(DirectoryPtr rootDirPtr, std::size_t maxFilePathDepth, std::size_t maxFilePathLength);
+    InternalFileIterator(DirectoryStructureType& directoryStructure);
 
     InternalFileIterator(const InternalFileIterator& other) = default;
 
@@ -213,6 +215,8 @@ private:
 };
 
 private:
+    const char* directoryPath;
+    std::size_t directoryPathLength;
     std::size_t maxFilePathDepth;
     std::size_t maxFilePathLength;
     Directory rootDir;
@@ -233,7 +237,9 @@ private:
 
 template<typename FileInfo>
 line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const char* directoryPath)
-: maxFilePathDepth{0},
+: directoryPath{directoryPath},
+directoryPathLength{std::strlen(directoryPath)},
+maxFilePathDepth{0},
 maxFilePathLength{0},
 rootDir{line::core::String{lastDirectoryInPath(directoryPath)}},
 filePathCache{} { }
@@ -272,13 +278,13 @@ line::core::DirectoryStructure<FileInfo>::insert(FilePathIterator&& filePathIter
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::ConstFileIterator
 line::core::DirectoryStructure<FileInfo>::constFileIterator() const {
-    return {&rootDir, maxFilePathDepth, maxFilePathLength};
+    return {*this};
 }
 
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::FileIterator
 line::core::DirectoryStructure<FileInfo>::fileIterator() {
-    return {&rootDir, maxFilePathDepth, maxFilePathLength};
+    return {*this};
 }
 
 template<typename FileInfo>
@@ -428,11 +434,17 @@ line::core::DirectoryStructure<FileInfo>::Directory::Directory(Name&& name)
 
 template<typename FileInfo>
 template<bool Const>
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(
-    DirectoryPtr rootDirPtr, std::size_t maxFilePathDepth, std::size_t maxFilePathLength
-) : directoryPath{maxFilePathDepth}, filePath{maxFilePathLength + 1}, fileIterator{} {
-    if(maxFilePathLength) {
-        moveDown(rootDirPtr);
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(DirectoryStructureType& directoryStructure)
+: directoryPath{!directoryStructure.isEmpty() ? directoryStructure.maxFilePathDepth : 0},
+filePath{!directoryStructure.isEmpty()
+    ? (directoryStructure.maxFilePathLength + directoryStructure.directoryPathLength + 2) : 0},
+fileIterator{} {
+    if(!directoryStructure.isEmpty()) {
+        for(std::size_t i = 0; i < directoryStructure.directoryPathLength; ++i) {
+            filePath.push(directoryStructure.directoryPath[i]);
+        }
+        filePath.push('/');
+        moveDown(&directoryStructure.rootDir);
     }
 }
 
@@ -446,6 +458,7 @@ template<typename FileInfo>
 template<bool Const>
 typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::ConstData
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() const noexcept {
+    assert(*this);
     return {line::core::String::StringSlice{filePath.data(), filePath.size()}, (*fileIterator).fileInfo};
 }
 

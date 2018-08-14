@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <iostream>
 
 namespace line {
 
@@ -72,6 +73,8 @@ private:
     const char* string;
     std::size_t stringLength;
 };
+
+std::ostream& operator<<(std::ostream& out, const String::StringSlice& stringSlice);
 
 }
 

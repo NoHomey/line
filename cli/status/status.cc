@@ -4,6 +4,7 @@
 #include "../../core/FileRecursiveIterator/FileRecursiveIterator.h"
 #include "../../core/DirectoryStructure.thd"
 #include "../common/Navigator/Navigator.h"
+#include "../common/PathCutter/PathCutter.h"
 #include "../common/funcs/funcs.h"
 
 enum class FileAction {Add, Update, Remove, Keep};
@@ -29,13 +30,9 @@ static FilesStatus getFilesStatus(std::size_t commitsCounter) {
         readCommitDirectorySnapshot(commitsCounter, filesStatus);
     }
     line::core::FileRecursiveIterator directoryIterator(navigator.path());
-    const std::size_t directoryLength = std::strlen(navigator.path());
     while(directoryIterator) {
         line::core::String::StringSlice absoluteFilePath = *directoryIterator;
-        line::core::String::StringSlice relativeFilePath{
-            absoluteFilePath.beginning + directoryLength + 1,
-            absoluteFilePath.count - (directoryLength + 1)
-        };
+        line::core::String::StringSlice relativeFilePath = line::cli::common::PathCutter::cutPath(*directoryIterator);
         line::core::Hasher::Hash fileHash = line::core::Hasher::hashFile(absoluteFilePath.beginning);
         line::utils::types::Optional<FileStatus&> findResult = filesStatus.find(relativeFilePath);
         if(findResult) {
@@ -52,8 +49,8 @@ static FilesStatus getFilesStatus(std::size_t commitsCounter) {
     return filesStatus;
 }
 
-static void printFileStatus(FilesStatus::ConstFileIterator::ConstData& fileInfo) {
-    switch(fileInfo.second.action) {
+static void printFileStatus(const line::core::String::StringSlice& relativeFileName, FileAction fileAction) {
+    switch(fileAction) {
         case FileAction::Add:
             std::cout << "add ";
             break;
@@ -65,7 +62,7 @@ static void printFileStatus(FilesStatus::ConstFileIterator::ConstData& fileInfo)
             break;
         default: assert(false);
     }
-    std::cout << fileInfo.first.beginning << std::endl;
+    std::cout << relativeFileName << std::endl;
 }
 
 static void reportStatus() {
@@ -81,7 +78,8 @@ static void reportStatus() {
                 std::cout << "Current commit: " << (commitsCounter + 1) << std::endl;
                 std::cout << "changes:" << std::endl;
             }
-            printFileStatus(fileInfo);
+            line::core::String::StringSlice relativeFilePath = line::cli::common::PathCutter::cutPath(fileInfo.first);
+            printFileStatus(relativeFilePath, fileInfo.second.action);
         }
         ++iter;
     }
@@ -100,7 +98,9 @@ void line::cli::status(int argc, char** argv) {
         std::cout << "'line status' expects only one argument. " << argumentDescription << std::endl;
         return;
     }
-    line::cli::common::Navigator::init(argv[0]);
+    const char* directoryPath = argv[0];
+    line::cli::common::Navigator::init(directoryPath);
+    line::cli::common::PathCutter::init(directoryPath);
     if(line::cli::common::funcs::isRepository()) {
         reportStatus();
     }

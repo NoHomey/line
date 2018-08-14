@@ -109,3 +109,8 @@ char* line::core::String::copy(const char* string, std::size_t& length) {
     std::memcpy(data, string, length + 1);
     return data;
 }
+
+std::ostream& line::core::operator<<(std::ostream& out, const String::StringSlice& stringSlice) {
+    out.write(stringSlice.beginning, stringSlice.count);
+    return out;
+}

@@ -6,6 +6,7 @@
 #include "../../core/FileRecursiveIterator/FileRecursiveIterator.h"
 #include "../../core/DirectoryStructure.thd"
 #include "../common/Navigator/Navigator.h"
+#include "../common/PathCutter/PathCutter.h"
 #include "../common/Timestamp/Timestamp.h"
 #include "../common/funcs/funcs.h"
 
@@ -22,13 +23,9 @@ static line::core::DirectoryStructure<line::core::Hasher::Hash> readDirectoryStr
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
     line::core::DirectoryStructure<line::core::Hasher::Hash> directoryStructure{navigator.navigateToDirectory()};
     line::core::FileRecursiveIterator directoryIterator{navigator.path()};
-    const std::size_t directoryLength = std::strlen(navigator.path());
     while(directoryIterator) {
         line::core::String::StringSlice absoluteFilePath = *directoryIterator;
-        line::core::String::StringSlice relativeFilePath{
-            absoluteFilePath.beginning + directoryLength + 1,
-            absoluteFilePath.count - (directoryLength + 1)
-        };
+        line::core::String::StringSlice relativeFilePath = line::cli::common::PathCutter::cutPath(*directoryIterator);
         directoryStructure.insert(relativeFilePath, line::core::Hasher::hashFile(absoluteFilePath.beginning));
         ++directoryIterator;
     }
@@ -50,13 +47,7 @@ static void storeFileData(const line::core::DirectoryStructure<line::core::Hashe
     fileObject.exceptions(std::ofstream::badbit);
     fileObject.open(navigator.path());
     file.exceptions(std::ifstream::badbit);
-    const std::size_t direcotryLength = std::strlen(navigator.navigateToDirectory());
-    char* filePath = new char[direcotryLength + fileData.first.count + 1];
-    std::memcpy(filePath, navigator.path(), direcotryLength);
-    filePath[direcotryLength] = '/';
-    std::memcpy(filePath + direcotryLength + 1, fileData.first.beginning, fileData.first.count + 1);
-    file.open(filePath);
-    delete[] filePath;
+    file.open(fileData.first.beginning);
     while(file) {
         file.read(buffer, 4096);
         if(file.gcount()) {
@@ -107,10 +98,8 @@ static void createNewCommit(const Commit& commit) {
     while(fileIterator) {
         line::core::DirectoryStructure<line::core::Hasher::Hash>::ConstFileIterator::ConstData fileData = *fileIterator;
         line::core::String::StringSlice hexHashCode = line::core::Hasher::Hash::toHexHashCode(fileData.second);
-        commitFile.write(fileData.first.beginning, fileData.first.count);
-        commitFile << '/' ;
-        commitFile.write(hexHashCode.beginning, hexHashCode.count);
-        commitFile << std::endl;
+        line::core::String::StringSlice relativeFilePath = line::cli::common::PathCutter::cutPath(fileData.first);
+        commitFile << relativeFilePath << '/' << hexHashCode << std::endl;
         storeFileData(fileData);
         ++fileIterator;
     }
@@ -125,7 +114,9 @@ void line::cli::commit(int argc, char** argv) {
         std::cout << "'line commit' expects at least 3 arguments" << std::endl;
         return;
     }
-    line::cli::common::Navigator::init(argv[0]);
+    const char* directoryPath = argv[0];
+    line::cli::common::Navigator::init(directoryPath);
+    line::cli::common::PathCutter::init(directoryPath);
     if(line::cli::common::funcs::isRepository()) {
         createNewCommit(Commit{argv[1], argv[2]});
     }
