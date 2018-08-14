@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include "./cli/init/init.h"
+#include "./cli/log/log.h"
 
 struct Command {
     const char* name;
@@ -20,8 +21,11 @@ static void seeHelp() {
 }
 
 int main(int argc, char** argv) {
-    const unsigned int commandsCount = 1;
-    Command commands[commandsCount] = {{"init", line::cli::init}};
+    const unsigned int commandsCount = 2;
+    Command commands[commandsCount] = {
+        {"init", line::cli::init},
+        {"log", line::cli::log}
+    };
     void (*command)(int, char**) = nullptr;
     if(argc == 1) {
         std::cout << "line expects at least one argument. The command to execute.";

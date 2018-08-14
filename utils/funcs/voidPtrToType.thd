@@ -1,0 +1,18 @@
+#pragma once
+
+namespace line {
+
+namespace utils {
+
+namespace funcs {
+
+template<typename Type>
+Type voidPtrToType(void* ptr) {
+    return *reinterpret_cast<Type*>(ptr);
+}
+
+}
+
+}
+
+}

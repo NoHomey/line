@@ -2,22 +2,81 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <iostream>
+#include <fstream>
+#include <cassert>
+#include "../Navigator/Navigator.h"
+#include "../../../utils/funcs/voidPtrToType.thd"
 
-bool line::cli::common::funcs::isDirectory(const char* directoryPath) {
+enum class DirectoryCheckResult {NotExist, Error, NotADirectory, Directory};
+
+static DirectoryCheckResult checkIsDirectory(const char* directoryPath) {
     struct stat statStruct;
     errno = 0;
     if(lstat(directoryPath, &statStruct)) {
         if(errno == ENOENT) {
-            std::cout << directoryPath << " is not pointing to existing directory" << std::endl;
+            return DirectoryCheckResult::NotExist;
         } else {
-            std::cout << "Error occured while trying to check if "
-                << directoryPath << " is directory." << std::endl;
+            return DirectoryCheckResult::Error;
         }
-        return false;
     }
     if(!S_ISDIR(statStruct.st_mode)) {
-        std::cout << directoryPath << " is not a directory." << std::endl;
+        return DirectoryCheckResult::NotADirectory;
+    }
+    return DirectoryCheckResult::Directory;
+}
+
+bool line::cli::common::funcs::isDirectory(const char* directoryPath) {
+    switch(checkIsDirectory(directoryPath)) {
+        case DirectoryCheckResult::NotExist:
+            std::cout << directoryPath << " is not an existing directory." << std::endl;
+            return false;
+        case DirectoryCheckResult::Error:
+            std::cout << "Error occured while trying to check if "
+                << directoryPath << " is directory." << std::endl;
+            return false;
+        case DirectoryCheckResult::NotADirectory:
+            std::cout << directoryPath << " is not a directory." << std::endl;
+            return false;
+        case DirectoryCheckResult::Directory: return true;
+        default: assert(false);
+    }
+}
+
+bool line::cli::common::funcs::isRepository() {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    if(!isDirectory(navigator.navigateToDirectory())) {
         return false;
     }
-    return true;
+    switch(checkIsDirectory(navigator.navigateToRepoInfoDir())) {
+        case DirectoryCheckResult::NotExist:
+            std::cout << navigator.navigateToDirectory()
+                << " is not a line reposiory. Run 'line init "
+                << navigator.path() << "' to initialize it as an empty line repository." << std::endl;
+            return false;
+        case DirectoryCheckResult::Error:
+            std::cout << "Error occured while trying to check if "
+                << navigator.navigateToDirectory() << " is line repository." << std::endl;
+            return false;
+        case DirectoryCheckResult::NotADirectory:
+            std::cout << std::cout << navigator.navigateToDirectory()
+                << " dose not seems to be a valid line repository. "
+                << navigator.navigateToRepoInfoDir() << " is not a directory." << std::endl;
+            return false;
+        case DirectoryCheckResult::Directory: return true;
+        default: assert(false);
+    }
+}
+
+line::utils::types::Optional<std::size_t> line::cli::common::funcs::readCommitsCounter() {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    std::ifstream commitsCounter{navigator.navigateToCommitsCounter()};
+    if(commitsCounter) {
+        std::size_t counter;
+        commitsCounter >> counter;
+        if(commitsCounter) {
+            return {&counter, line::utils::funcs::voidPtrToType<std::size_t>};
+        }
+    }
+    std::cout << "Internal Error occured!" << std::endl;
+    return {};
 }

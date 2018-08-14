@@ -6,7 +6,7 @@ Executable = line
 
 CoreObjects = Hasher FileRecursiveIterator FilePathIterator String
 
-CliObjects = Navigator cliCommonFuncs init
+CliObjects = Navigator cliCommonFuncs init log
 
 Objects = $(CliObjects) $(CoreObjects)
 
@@ -38,11 +38,11 @@ $(eval $(call Object,$(core),Hasher))
 
 $(eval $(call Object,$(cliCommon),Navigator))
 
-$(eval $(call Object,$(cliCommon),funcs))
+$(eval $(call Object,$(cli),init,cliCommonFuncs))
 
-$(eval $(call Object,$(cli),init))
+$(eval $(call Object,$(cli),log,cliCommonFuncs))
 
-cliCommonFuncs.o: $(cliCommon)/funcs/funcs.cc
+cliCommonFuncs.o: $(cliCommon)/funcs/funcs.cc Navigator.o
 	$(COMPILER) -c -o cliCommonFuncs.o $< $(LibCrypto)
 
 clean:

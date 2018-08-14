@@ -83,12 +83,13 @@ static void initRepository(const char* directory) {
 }
 
 void line::cli::init(int argc, char** argv) {
+    const char* argumentDescription = "The directory to be initialized as line repository.";
     if(!argc) {
-        std::cout << "'line init' expects one argument. The directory to be initialized as line repository." << std::endl;
+        std::cout << "'line init' expects one argument. " << argumentDescription << std::endl;
         return;
     }
     if(argc > 1) {
-        std::cout << "'line init' expects only one argument. The directory to be initialized as line repository." << std::endl;
+        std::cout << "'line init' expects only one argument. " << argumentDescription << std::endl;
         return;
     }
     const char* directory = argv[0];
