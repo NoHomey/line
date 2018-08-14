@@ -411,7 +411,9 @@ template<typename FileInfo>
 template<bool Const>
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(DirectoryPtr rootDirPtr)
 : InternalFileIterator{} {
-    moveDown(rootDirPtr);
+    if((!rootDirPtr->children.isEmpty()) || (!rootDirPtr->files.isEmpty())) {
+        moveDown(rootDirPtr);
+    }
 }
 
 template<typename FileInfo>

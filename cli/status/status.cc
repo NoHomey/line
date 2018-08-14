@@ -85,6 +85,9 @@ static void reportStatus() {
         }
         ++iter;
     }
+    if(!changes) {
+        std::cout << "No changes found." << std::endl;
+    }
 }
 
 void line::cli::status(int argc, char** argv) {
