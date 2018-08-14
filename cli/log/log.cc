@@ -3,16 +3,15 @@
 #include "../common/Navigator/Navigator.h"
 #include "../common/funcs/funcs.h"
 
-static void listCommits() {
+static void listCommits(std::size_t commitsCounter) {
     // IMPLEMENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
 
 static void logCommits() {
-    line::utils::types::Optional<std::size_t> readCommitsCounter = line::cli::common::funcs::readCommitsCounter();
-    if(readCommitsCounter) {
-        std::size_t commitsCounter = *readCommitsCounter;
+    std::size_t commitsCounter;
+    if(line::cli::common::funcs::readCommitsCounter(commitsCounter)) {
         if(commitsCounter) {
-            listCommits();
+            listCommits(commitsCounter);
         } else {
             std::cout << "Commits:" << std::endl
             << "Nothing to show. No commit has been made." << std::endl;

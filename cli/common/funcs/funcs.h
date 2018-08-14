@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../utils/types/Optional.thd"
+#include <cstddef>
 
 namespace line {
 
@@ -14,7 +14,7 @@ bool isDirectory(const char* directoryPath);
 
 bool isRepository();
 
-line::utils::types::Optional<std::size_t> readCommitsCounter();
+bool readCommitsCounter(std::size_t& commitsCounter);
 
 }
 

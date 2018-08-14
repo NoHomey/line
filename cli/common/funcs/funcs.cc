@@ -5,7 +5,6 @@
 #include <fstream>
 #include <cassert>
 #include "../Navigator/Navigator.h"
-#include "../../../utils/funcs/voidPtrToType.thd"
 
 enum class DirectoryCheckResult {NotExist, Error, NotADirectory, Directory};
 
@@ -67,16 +66,15 @@ bool line::cli::common::funcs::isRepository() {
     }
 }
 
-line::utils::types::Optional<std::size_t> line::cli::common::funcs::readCommitsCounter() {
+bool line::cli::common::funcs::readCommitsCounter(std::size_t& commitsCounter) {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    std::ifstream commitsCounter{navigator.navigateToCommitsCounter()};
-    if(commitsCounter) {
-        std::size_t counter;
-        commitsCounter >> counter;
-        if(commitsCounter) {
-            return {&counter, line::utils::funcs::voidPtrToType<std::size_t>};
+    std::ifstream commitsCounterFile{navigator.navigateToCommitsCounter()};
+    if(commitsCounterFile) {
+        commitsCounterFile >> commitsCounter;
+        if(commitsCounterFile) {
+            return true;
         }
     }
     std::cout << "Internal Error occured!" << std::endl;
-    return {};
+    return false;
 }

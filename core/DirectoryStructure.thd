@@ -16,13 +16,7 @@ namespace core {
 template<typename FileInfo>
 class DirectoryStructure {
 public:
-    DirectoryStructure(const line::core::String& rootDirPath, const line::core::String& rootDirName);
-
-    DirectoryStructure(line::core::String&& rootDirPath, const line::core::String& rootDirName);
-
-    DirectoryStructure(line::core::String&& rootDirPath, line::core::String&& rootDirName) noexcept;
-
-    DirectoryStructure(const line::core::String& rootDirPath, line::core::String&& rootDirName);
+    DirectoryStructure(const char* directoryPath);
 
     DirectoryStructure(const DirectoryStructure& other) = delete;
 
@@ -63,6 +57,8 @@ private:
     using SearchKey = line::core::String::StringSlice;
 
 private:
+    static const char* lastDirectoryInPath(const char* directoryPath) noexcept;
+
     static line::utils::types::ComparsionResult strcmpWrappedResult(const char* left, const char* right) noexcept;
 
     template<typename DirectoryObject>
@@ -211,7 +207,6 @@ private:
 };
 
 private:
-    line::core::String rootDirPath;
     Directory rootDir;
     line::dataStructures::RDStack<Directory*> filePathCache;
 };
@@ -229,20 +224,8 @@ private:
 #include "../utils/funcs/integerToComparsionResult.thd"
 
 template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const line::core::String& rootDirPath, const line::core::String& rootDirName)
-: rootDirPath{rootDirPath}, rootDir{rootDirName}, filePathCache{} { }
-
-template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::DirectoryStructure(line::core::String&& rootDirPath, const line::core::String& rootDirName)
-: rootDirPath{std::move(rootDirPath)}, rootDir{rootDirName}, filePathCache{} { }
-
-template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::DirectoryStructure(line::core::String&& rootDirPath, line::core::String&& rootDirName) noexcept
-: rootDirPath{std::move(rootDirPath)}, rootDir{std::move(rootDirName)}, filePathCache{} { }
-
-template<typename FileInfo>
-line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const line::core::String& rootDirPath, line::core::String&& rootDirName)
-: rootDirPath{rootDirPath}, rootDir{std::move(rootDirName)}, filePathCache{} { }
+line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const char* directoryPath)
+: rootDir{line::core::String{lastDirectoryInPath(directoryPath)}}, filePathCache{} { }
 
 template<typename FileInfo>
 line::utils::types::Optional<const FileInfo&>
@@ -279,6 +262,20 @@ template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::FileIterator
 line::core::DirectoryStructure<FileInfo>::fileIterator() {
     return {&rootDir};
+}
+
+template<typename FileInfo>
+const char*
+line::core::DirectoryStructure<FileInfo>::lastDirectoryInPath(const char* directoryPath) noexcept {
+    assert(directoryPath);
+    assert(directoryPath[0]);
+    std::size_t offset = 0;
+    for(std::size_t i = 0; directoryPath[i]; ++i) {
+        if(directoryPath[i] == '/') {
+            offset = i + 1;
+        }
+    }
+    return directoryPath + offset;
 }
 
 template<typename FileInfo>
