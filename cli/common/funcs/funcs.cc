@@ -73,5 +73,6 @@ std::size_t line::cli::common::funcs::readCommitsCounter() {
     commitsCounterFile.exceptions(std::ifstream::badbit);
     commitsCounterFile.open(navigator.navigateToCommitsCounter());
     commitsCounterFile >> commitsCounter;
+    commitsCounterFile.close();
     return commitsCounter;
 }

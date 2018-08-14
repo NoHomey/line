@@ -79,6 +79,7 @@ static void initRepository(const char* directory) {
         cleanCreatedResourcesAndWarnFailInitialize(createdResources);
         return;
     }
+    commitsCounter.close();
     std::cout << "Initialized empty line repository in " << directory << std::endl;
 }
 

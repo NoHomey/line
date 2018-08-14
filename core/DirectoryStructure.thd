@@ -29,6 +29,8 @@ public:
     DirectoryStructure& operator=(DirectoryStructure&& other) noexcept = delete;
 
 public:
+    bool isEmpty() const noexcept;
+
     line::utils::types::Optional<const FileInfo&> find(FilePathIterator&& filePathIterator) const;
 
 public:
@@ -235,6 +237,12 @@ line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const char* directo
 maxFilePathLength{0},
 rootDir{line::core::String{lastDirectoryInPath(directoryPath)}},
 filePathCache{} { }
+
+template<typename FileInfo>
+bool
+line::core::DirectoryStructure<FileInfo>::isEmpty() const noexcept {
+    return !maxFilePathLength;
+}
 
 template<typename FileInfo>
 line::utils::types::Optional<const FileInfo&>

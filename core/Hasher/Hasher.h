@@ -3,6 +3,7 @@
 #include <utility>
 #include <iostream>
 #include <openssl/sha.h>
+#include "../String/String.h"
 #include "../../utils/types/ComparsionResult.h"
 
 namespace line {
@@ -20,6 +21,12 @@ public:
 
 public:
 class Hash {
+public:
+    static const std::size_t hexHashCodeLength = 2 * SHA256_DIGEST_LENGTH;
+
+public:
+    static line::core::String::StringSlice toHexHashCode(const Hash& hash) noexcept;
+
 public:
     Hash() noexcept = delete;
 
@@ -44,12 +51,13 @@ public:
 
     line::utils::types::ComparsionResult compare(const Hash& other) const noexcept;
 
-    void print(std::ostream& output);
-
 private:
     static char bitsToHex(unsigned char bits) noexcept;
 
     static std::pair<char, char> toHex(unsigned char data) noexcept;
+
+private:
+    static char hexHashCode[hexHashCodeLength + 1];
 
 private:
     unsigned char hashCode[SHA256_DIGEST_LENGTH];

@@ -8,6 +8,8 @@ unsigned char line::core::Hasher::hashCode[SHA256_DIGEST_LENGTH];
 
 char line::core::Hasher::inputBuffer[inputBufferSize];
 
+char line::core::Hasher::Hash::hexHashCode[hexHashCodeLength + 1];
+
 line::core::Hasher::Hash line::core::Hasher::hash(std::istream& input) {
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -35,6 +37,16 @@ line::core::Hasher::Hash::Hash(unsigned char* hash) noexcept {
     std::memcpy(hashCode, hash, SHA256_DIGEST_LENGTH);
 }
 
+line::core::String::StringSlice line::core::Hasher::Hash::toHexHashCode(const Hash& hash) noexcept {
+    for(unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        std::pair<char, char> hex = toHex(hash.hashCode[i]);
+        hexHashCode[2 * i] = hex.first;
+        hexHashCode[2 * i + 1] = hex.second;
+    }
+    hexHashCode[hexHashCodeLength] = '\0';
+    return {hexHashCode, hexHashCodeLength};
+}
+
 const unsigned char* line::core::Hasher::Hash::hash() const noexcept {
     return hashCode;
 }
@@ -49,13 +61,6 @@ bool line::core::Hasher::Hash::operator!=(const Hash& other) const noexcept {
 
 line::utils::types::ComparsionResult line::core::Hasher::Hash::compare(const Hash& other) const noexcept {
     return line::utils::funcs::integerToComparsionResult(std::memcmp(hashCode, other.hashCode, SHA256_DIGEST_LENGTH));
-}
-
-void line::core::Hasher::Hash::print(std::ostream& output) {
-    for(unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        std::pair<char, char> hex = toHex(hashCode[i]);
-        output << hex.first << hex.second;
-    }
 }
 
  char line::core::Hasher::Hash::bitsToHex(unsigned char bits) noexcept {

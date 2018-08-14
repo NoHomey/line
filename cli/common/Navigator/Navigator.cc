@@ -1,6 +1,7 @@
 #include "./Navigator.h"
 #include <cassert>
 #include <cstring>
+#include <cstdio>
 
 line::cli::common::Navigator line::cli::common::Navigator::instance;
 
@@ -47,9 +48,25 @@ const char* line::cli::common::Navigator::navigateToCommitsLog() noexcept {
     return currentPath;
 }
 
+const char* line::cli::common::Navigator::navigateToCommit(std::size_t commitId) noexcept {
+    assert(isInitialized());
+    assert(commitId);
+    std::sprintf(currentPath + directoryPathLength, "/.line/commits/%lu", commitId);
+    return currentPath;
+}
+
 const char* line::cli::common::Navigator::navigateToObjects() noexcept {
     assert(isInitialized());
     std::memcpy(currentPath + directoryPathLength, "/.line/objects", 15);
+    return currentPath;
+}
+
+const char* line::cli::common::Navigator::navigateToObject(const line::core::Hasher::Hash& hash) noexcept {
+    assert(isInitialized());
+    std::memcpy(currentPath + directoryPathLength, "/.line/objects/", 15);
+    line::core::String::StringSlice hexHashCode = line::core::Hasher::Hash::toHexHashCode(hash);
+    std::memcpy(currentPath + directoryPathLength + 15, hexHashCode.beginning, hexHashCode.count);
+    currentPath[maximumAdditionalChars - 1] = '\0';
     return currentPath;
 }
 

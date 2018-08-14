@@ -29,14 +29,14 @@ static FilesStatus getFilesStatus(std::size_t commitsCounter) {
         readCommitDirectorySnapshot(commitsCounter, filesStatus);
     }
     line::core::FileRecursiveIterator directoryIterator(navigator.path());
+    const std::size_t directoryLength = std::strlen(navigator.path());
     while(directoryIterator) {
-        std::size_t directoryLength = std::strlen(navigator.path());
-        line::core::String::StringSlice absolutePath = *directoryIterator;
+        line::core::String::StringSlice absoluteFilePath = *directoryIterator;
         line::core::String::StringSlice relativeFilePath{
-            absolutePath.beginning + directoryLength + 1,
-            absolutePath.count - (directoryLength + 1)
+            absoluteFilePath.beginning + directoryLength + 1,
+            absoluteFilePath.count - (directoryLength + 1)
         };
-        line::core::Hasher::Hash fileHash = line::core::Hasher::hashFile(relativeFilePath.beginning);
+        line::core::Hasher::Hash fileHash = line::core::Hasher::hashFile(absoluteFilePath.beginning);
         line::utils::types::Optional<FileStatus&> findResult = filesStatus.find(relativeFilePath);
         if(findResult) {
             FileStatus& fileStatus = *findResult;

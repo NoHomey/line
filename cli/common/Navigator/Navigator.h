@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include "../../../core/Hasher/Hasher.h"
 
 namespace line {
 
@@ -28,7 +29,11 @@ public:
 
     const char* navigateToCommitsLog() noexcept;
 
+    const char* navigateToCommit(std::size_t commitId) noexcept;
+
     const char* navigateToObjects() noexcept;
+
+    const char* navigateToObject(const line::core::Hasher::Hash& hash) noexcept;
 
 private:
     Navigator() noexcept;
@@ -50,7 +55,7 @@ private:
     void initialize(const char* directoryPath);
 
 private:
-    static const std::size_t maximumAdditionalChars = 80;
+    static const std::size_t maximumAdditionalChars = 15 + line::core::Hasher::Hash::hexHashCodeLength + 1;
 
     static Navigator instance;
 
