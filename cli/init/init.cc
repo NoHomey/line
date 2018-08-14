@@ -1,9 +1,18 @@
 #include "./init.h"
+#include "../common/funcs/funcs.h"
+#include "../common/Navigator/Navigator.h"
 #include <iostream>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <errno.h>
-#include <cstring>
+#include <fstream>
+
+struct CreatedResources {
+    bool repoInfoDir = false;
+    bool commits = false;
+    bool objects = false;
+    bool commitsCounter = false;
+};
 
 static int mkdirWithPermisions(const char* directory) {
     errno = 0;
@@ -14,32 +23,63 @@ static void warnFailedToInitializeRepostiory(const char* directory) {
     std::cout << "Failed to initialize line repository in " << directory << std::endl;
 }
 
+static void cleanCreatedResourcesAndWarnFailInitialize(const CreatedResources& createdResources) {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    if(createdResources.commitsCounter) {
+        errno = 0;
+        unlink(navigator.navigateToCommitsCounter());
+    }
+    if(createdResources.commits) {
+        errno = 0;
+        rmdir(navigator.navigateToCommits());
+    }
+    if(createdResources.objects) {
+        errno = 0;
+        rmdir(navigator.navigateToObjects());
+    }
+    if(createdResources.repoInfoDir) {
+        errno = 0;
+        rmdir(navigator.navigateToRepoInfoDir());
+    }
+    warnFailedToInitializeRepostiory(navigator.navigateToDirectory());
+}
+
 static void initRepository(const char* directory) {
-    const std::size_t additionalBytesNeeded = 15;
-    const std::size_t directoryLength = std::strlen(directory);
-    char* lineDirectory = new char[directoryLength + additionalBytesNeeded];
-    std::memcpy(lineDirectory, directory, directoryLength);
-    std::memcpy(lineDirectory + directoryLength, "/.line", 7);
-    if(mkdirWithPermisions(lineDirectory)) {
+    CreatedResources createdResources;
+    line::cli::common::Navigator::init(directory);
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    if(mkdirWithPermisions(navigator.navigateToRepoInfoDir())) {
         if(errno == EEXIST) {
             std::cout << directory << " is a line repository." << std::endl;
         } else {
             warnFailedToInitializeRepostiory(directory);
         }
-    } else {
-        std::memcpy(lineDirectory + directoryLength + 6, "/objects", 9);
-        if(mkdirWithPermisions(lineDirectory)) {
-            warnFailedToInitializeRepostiory(directory);
-        } else {
-            std::memcpy(lineDirectory + directoryLength + 6, "/commits", 9);
-            if(mkdirWithPermisions(lineDirectory)) {
-                warnFailedToInitializeRepostiory(directory);
-            } else {
-                std::cout << "Initialized empty line repository in " << directory << std::endl;
-            }
-        }
+        return;
     }
-    delete[] lineDirectory;
+    createdResources.repoInfoDir = true;
+    if(mkdirWithPermisions(navigator.navigateToObjects())) {
+        cleanCreatedResourcesAndWarnFailInitialize(createdResources);
+        return;
+    }
+    createdResources.objects = true;
+    if(mkdirWithPermisions(navigator.navigateToCommits())) {
+        cleanCreatedResourcesAndWarnFailInitialize(createdResources);
+        return;
+    }
+    createdResources.commits = true;
+    std::ofstream commitsCounter{navigator.navigateToCommitsCounter()};
+    if(!commitsCounter) {
+        cleanCreatedResourcesAndWarnFailInitialize(createdResources);
+        return;
+    }
+    createdResources.commitsCounter = true;
+    commitsCounter << 0;
+    if(!commitsCounter) {
+        commitsCounter.close();
+        cleanCreatedResourcesAndWarnFailInitialize(createdResources);
+        return;
+    }
+    std::cout << "Initialized empty line repository in " << directory << std::endl;
 }
 
 void line::cli::init(int argc, char** argv) {
@@ -52,20 +92,7 @@ void line::cli::init(int argc, char** argv) {
         return;
     }
     const char* directory = argv[0];
-    struct stat statStruct;
-    errno = 0;
-    if(lstat(directory, &statStruct)) {
-        if(errno == ENOENT) {
-            std::cout << directory << " is not pointing to existing directory" << std::endl;
-        } else {
-            std::cout << "Error occured while trying to check if "
-                << directory << " is directory." << std::endl;
-        }
-    } else {
-        if(S_ISDIR(statStruct.st_mode)) {
-            initRepository(directory);
-        } else {
-            std::cout << directory << " is not a directory." << std::endl;
-        }
+    if(line::cli::common::funcs::isDirectory(directory)) {
+        initRepository(directory);
     }
 }

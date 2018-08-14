@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/line",
-            "args": [],
+            "args": ["init", "~/tmp/play-with-git"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

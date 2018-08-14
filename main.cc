@@ -4,6 +4,11 @@
 #include <cstring>
 #include "./cli/init/init.h"
 
+struct Command {
+    const char* name;
+    void (*exec)(int, char**);
+};
+
 static bool areEqual(const char* str1, const char* str2) {
     assert(str1);
     assert(str2);
@@ -15,16 +20,25 @@ static void seeHelp() {
 }
 
 int main(int argc, char** argv) {
+    const unsigned int commandsCount = 1;
+    Command commands[commandsCount] = {{"init", line::cli::init}};
+    void (*command)(int, char**) = nullptr;
     if(argc == 1) {
         std::cout << "line expects at least one argument. The command to execute.";
         seeHelp();
+        return 0;
     } else {
-        if(areEqual(argv[1], "init")) {
-            line::cli::init(argc - 2, argv + 2);
+        for(unsigned int i = 0; i < commandsCount; ++i) {
+            if(areEqual(argv[1], commands[i].name)) {
+                command = commands[i].exec;
+                break;
+            }
+        }
+        if(command) {
+            command(argc - 2, argv + 2);
         } else {
-            std::cout << '\'' << "line " << argv[1] << '\''
-                << " is not a line command. See 'line help' for list of avalible line commands.";
-                seeHelp();
+            std::cout << '\'' << "line " << argv[1] << '\'' << " is not a line command.";
+            seeHelp();
         }
     }
 
