@@ -29,10 +29,10 @@ public:
     DirectoryStructure& operator=(DirectoryStructure&& other) noexcept = delete;
 
 public:
-    line::utils::types::Optional<const FileInfo&> find(FilePathIterator&& filePathIterator) const noexcept;
+    line::utils::types::Optional<const FileInfo&> find(FilePathIterator&& filePathIterator) const;
 
 public:
-    line::utils::types::Optional<FileInfo&> find(FilePathIterator&& filePathIterator) noexcept;
+    line::utils::types::Optional<FileInfo&> find(FilePathIterator&& filePathIterator);
 
     void insert(FilePathIterator&& filePathIterator, FileInfo&& fileInfo);
 
@@ -72,7 +72,7 @@ private:
     static const FileInfo& getFileInfoConstRef(void* ptr) noexcept;
 
 private:
-    File* findFile(FilePathIterator&& filePathIterator) noexcept;
+    File* findFile(FilePathIterator&& filePathIterator);
 
     void updateFilePathCache(FilePathIterator& filePathIterator);
 
@@ -188,9 +188,13 @@ private:
 private:
     void addName(const Name& name);
 
+    void addFileName(const Name& name);
+
     void addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator);
 
     void removeName(const Name& name);
+
+    void removeFileName(const Name& name);
 
     void removeLastDirectory();
 
@@ -229,7 +233,7 @@ line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const char* directo
 
 template<typename FileInfo>
 line::utils::types::Optional<const FileInfo&>
-line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) const noexcept {
+line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) const {
     return line::utils::types::Optional<const FileInfo&>{
         const_cast<DirectoryStructure* const>(this)->findFile(std::move(filePathIterator)),
         getFileInfoConstRef
@@ -238,7 +242,7 @@ line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterat
 
 template<typename FileInfo>
 line::utils::types::Optional<FileInfo&> 
-line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) noexcept {
+line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) {
     return line::utils::types::Optional<FileInfo&>{findFile(std::move(filePathIterator)), getFileInfoRef};
 }
 
@@ -324,14 +328,16 @@ line::core::DirectoryStructure<FileInfo>::getFileInfoConstRef(void* ptr) noexcep
 
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::File*
-line::core::DirectoryStructure<FileInfo>::findFile(FilePathIterator&& filePathIterator) noexcept {
-    Directory* dir = &rootDir;
+line::core::DirectoryStructure<FileInfo>::findFile(FilePathIterator&& filePathIterator) {
+    updateFilePathCache(filePathIterator);
+    Directory* dir = filePathCache.isEmpty() ? &rootDir : filePathCache.data();
     while(filePathIterator) {
         line::utils::types::Optional<Directory&> result = dir->children.find(*filePathIterator);
         if(!result) {
             return nullptr;
         }
         dir = &result.value();
+        filePathCache.push(dir);
         ++filePathIterator;
     }
     line::utils::types::Optional<File&> result = dir->files.find(filePathIterator.getFileName());
@@ -425,17 +431,18 @@ template<typename FileInfo>
 template<bool Const>
 typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::Data
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() noexcept {
-    return {line::core::String::StringSlice{filePath.data(), filePath.size()}, (*fileIterator).fileInfo};
+    assert(*this);
+    return {line::core::String::StringSlice{filePath.data(), filePath.size() - 1}, (*fileIterator).fileInfo};
 }
 
 template<typename FileInfo>
 template<bool Const>
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>&
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator++() {
-    removeName((*fileIterator).name);
+    removeFileName((*fileIterator).name);
     ++fileIterator;
     if(fileIterator) {
-        addName((*fileIterator).name);
+        addFileName((*fileIterator).name);
     }
     else {
         changeDirectory();
@@ -486,6 +493,14 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addName(c
 template<typename FileInfo>
 template<bool Const>
 void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addFileName(const Name& name) {
+    addName(name);
+    filePath.push('\0');
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator) {
     addName((*directoryChildrenIterator).name);
     filePath.push('/');
@@ -499,6 +514,14 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeNam
     for(std::size_t i = 0; i < pops; ++i) {
         filePath.pop();
     }
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeFileName(const Name& name) {
+    filePath.pop();
+    removeName(name);
 }
 
 template<typename FileInfo>
@@ -525,7 +548,7 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveDown(
         directoryPath.push({dirPtr, 0});
     }
     fileIterator = iterator(dirPtr->files);
-    addName((*fileIterator).name);
+    addFileName((*fileIterator).name);
 }
 
 template<typename FileInfo>

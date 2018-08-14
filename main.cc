@@ -4,6 +4,7 @@
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
+#include "./cli/status/status.h"
 
 struct Command {
     const char* name;
@@ -21,10 +22,11 @@ static void seeHelp() {
 }
 
 int main(int argc, char** argv) {
-    const unsigned int commandsCount = 2;
+    const unsigned int commandsCount = 3;
     Command commands[commandsCount] = {
         {"init", line::cli::init},
-        {"log", line::cli::log}
+        {"log", line::cli::log},
+        {"status", line::cli::status}
     };
     void (*command)(int, char**) = nullptr;
     if(argc == 1) {

@@ -25,7 +25,8 @@ line::core::FileRecursiveIterator::operator bool() const noexcept {
 }
 
 line::core::String::StringSlice line::core::FileRecursiveIterator::operator*() const noexcept {
-    return {filePath.data(), filePath.size()};
+    assert(*this);
+    return {filePath.data(), filePath.size() - 1};
 }
 
 line::core::FileRecursiveIterator& line::core::FileRecursiveIterator::operator++() {
