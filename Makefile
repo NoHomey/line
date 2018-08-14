@@ -10,11 +10,13 @@ CliObjects = Navigator cliCommonFuncs init log status
 
 Objects = $(CliObjects) $(CoreObjects)
 
-LibCrypto = -I./ssl/include ./ssl/lib/libcrypto.a
+IncludeLibCrypto = -I./ssl/include
+
+LibCrypto = $(IncludeLibCrypto) ./ssl/lib/libcrypto.a
 
 define Object
 $(2).o: $(1)/$(2)/$(2).cc $(addsuffix .o,$(3))
-	$(COMPILER) -c $$< $(LibCrypto)
+	$(COMPILER) -c $$< $(IncludeLibCrypto)
 endef
 
 line: $(addsuffix .o,$(Objects)) ./main.cc
@@ -45,7 +47,7 @@ $(eval $(call Object,$(cli),log,cliCommonFuncs))
 $(eval $(call Object,$(cli),status,cliCommonFuncs FileRecursiveIterator Hasher))
 
 cliCommonFuncs.o: $(cliCommon)/funcs/funcs.cc Navigator.o
-	$(COMPILER) -c -o cliCommonFuncs.o $< $(LibCrypto)
+	$(COMPILER) -c -o cliCommonFuncs.o $< $(IncludeLibCrypto)
 
 clean:
 	rm -f *.o ./$(Executable)

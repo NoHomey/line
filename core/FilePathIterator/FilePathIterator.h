@@ -27,6 +27,10 @@ public:
 
     operator bool() const noexcept;
 
+    std::size_t depth() const noexcept;
+
+    std::size_t length() const noexcept;
+
 public:
     FilePathIterator& operator++() noexcept;
 
@@ -35,12 +39,14 @@ private:
 
     static std::size_t findFirstDirectoryDelimiter(const String::StringSlice& filePath) noexcept;
 
+    static std::size_t depthOfFilePath(const String::StringSlice& filePath) noexcept;
+
 private:
-    String::StringSlice filePath;
-
+    std::size_t filePathDepth;
+    std::size_t filePathLength;
+    String::StringSlice currentFilePath;
     std::size_t currentDirectoryLength;
-
-    String::StringSlice fileName;   
+    String::StringSlice fileName;
 };
 
 }

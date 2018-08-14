@@ -154,7 +154,7 @@ public:
 public:
     InternalFileIterator() noexcept = default;
 
-    InternalFileIterator(DirectoryPtr rootDirPtr);
+    InternalFileIterator(DirectoryPtr rootDirPtr, std::size_t maxFilePathDepth, std::size_t maxFilePathLength);
 
     InternalFileIterator(const InternalFileIterator& other) = default;
 
@@ -211,6 +211,8 @@ private:
 };
 
 private:
+    std::size_t maxFilePathDepth;
+    std::size_t maxFilePathLength;
     Directory rootDir;
     line::dataStructures::RDStack<Directory*> filePathCache;
 };
@@ -229,7 +231,10 @@ private:
 
 template<typename FileInfo>
 line::core::DirectoryStructure<FileInfo>::DirectoryStructure(const char* directoryPath)
-: rootDir{line::core::String{lastDirectoryInPath(directoryPath)}}, filePathCache{} { }
+: maxFilePathDepth{0},
+maxFilePathLength{0},
+rootDir{line::core::String{lastDirectoryInPath(directoryPath)}},
+filePathCache{} { }
 
 template<typename FileInfo>
 line::utils::types::Optional<const FileInfo&>
@@ -259,13 +264,13 @@ line::core::DirectoryStructure<FileInfo>::insert(FilePathIterator&& filePathIter
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::ConstFileIterator
 line::core::DirectoryStructure<FileInfo>::constFileIterator() const {
-    return {&rootDir};
+    return {&rootDir, maxFilePathDepth, maxFilePathLength};
 }
 
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::FileIterator
 line::core::DirectoryStructure<FileInfo>::fileIterator() {
-    return {&rootDir};
+    return {&rootDir, maxFilePathDepth, maxFilePathLength};
 }
 
 template<typename FileInfo>
@@ -380,6 +385,12 @@ line::core::DirectoryStructure<FileInfo>::ensurePathExists(Directory* parentDir,
         filePathCache.push(dir);
         ++filePathIterator;
     }
+    if(filePathIterator.depth() > maxFilePathDepth) {
+        maxFilePathDepth = filePathIterator.depth();
+    }
+    if(filePathIterator.length() > maxFilePathLength) {
+        maxFilePathLength = filePathIterator.length();
+    }
     return dir;
 }
 
@@ -409,9 +420,10 @@ line::core::DirectoryStructure<FileInfo>::Directory::Directory(Name&& name)
 
 template<typename FileInfo>
 template<bool Const>
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(DirectoryPtr rootDirPtr)
-: InternalFileIterator{} {
-    if((!rootDirPtr->children.isEmpty()) || (!rootDirPtr->files.isEmpty())) {
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(
+    DirectoryPtr rootDirPtr, std::size_t maxFilePathDepth, std::size_t maxFilePathLength
+) : directoryPath{maxFilePathDepth}, filePath{maxFilePathLength + 1}, fileIterator{} {
+    if(maxFilePathLength) {
         moveDown(rootDirPtr);
     }
 }
