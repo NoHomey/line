@@ -14,7 +14,7 @@ bool isDirectory(const char* directoryPath);
 
 bool isRepository();
 
-bool readCommitsCounter(std::size_t& commitsCounter);
+std::size_t readCommitsCounter();
 
 }
 

@@ -8,14 +8,11 @@ static void listCommits(std::size_t commitsCounter) {
 }
 
 static void logCommits() {
-    std::size_t commitsCounter;
-    if(line::cli::common::funcs::readCommitsCounter(commitsCounter)) {
-        if(commitsCounter) {
-            listCommits(commitsCounter);
-        } else {
-            std::cout << "Commits:" << std::endl
-            << "Nothing to show. No commit has been made." << std::endl;
-        }
+    std::size_t commitsCounter = line::cli::common::funcs::readCommitsCounter();
+    if(commitsCounter) {
+        listCommits(commitsCounter);
+    } else {
+        std::cout << "Commits:" << std::endl << "Nothing to show. No commit has been made." << std::endl;
     }
 }
 

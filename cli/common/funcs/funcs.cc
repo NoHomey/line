@@ -66,15 +66,12 @@ bool line::cli::common::funcs::isRepository() {
     }
 }
 
-bool line::cli::common::funcs::readCommitsCounter(std::size_t& commitsCounter) {
+std::size_t line::cli::common::funcs::readCommitsCounter() {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    std::ifstream commitsCounterFile{navigator.navigateToCommitsCounter()};
-    if(commitsCounterFile) {
-        commitsCounterFile >> commitsCounter;
-        if(commitsCounterFile) {
-            return true;
-        }
-    }
-    std::cout << "Internal Error occured!" << std::endl;
-    return false;
+    std::ifstream commitsCounterFile;
+    std::size_t commitsCounter;
+    commitsCounterFile.exceptions(std::ifstream::badbit);
+    commitsCounterFile.open(navigator.navigateToCommitsCounter());
+    commitsCounterFile >> commitsCounter;
+    return commitsCounter;
 }

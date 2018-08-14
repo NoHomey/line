@@ -1,6 +1,7 @@
 #include "./Hasher.h"
 #include <cassert>
 #include <cstring>
+#include <fstream>
 #include "../../utils/funcs/integerToComparsionResult.thd"
 
 unsigned char line::core::Hasher::hashCode[SHA256_DIGEST_LENGTH];
@@ -10,6 +11,7 @@ char line::core::Hasher::inputBuffer[inputBufferSize];
 line::core::Hasher::Hash line::core::Hasher::hash(std::istream& input) {
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
+    input.exceptions(std::istream::badbit);
     while(input) {
         input.read(inputBuffer, inputBufferSize);
         std::size_t readCount = input.gcount();
@@ -19,6 +21,13 @@ line::core::Hasher::Hash line::core::Hasher::hash(std::istream& input) {
     }
     SHA256_Final(hashCode, &sha256);
     return {hashCode};
+}
+
+line::core::Hasher::Hash line::core::Hasher::hashFile(const char* filePath) {
+    std::ifstream input;
+    input.exceptions(std::ifstream::badbit);
+    input.open(filePath);
+    return hash(input);
 }
 
 line::core::Hasher::Hash::Hash(unsigned char* hash) noexcept {

@@ -16,6 +16,8 @@ public:
 public:
     static Hash hash(std::istream& input);
 
+    static Hash hashFile(const char* filePath);
+
 public:
 class Hash {
 public:
