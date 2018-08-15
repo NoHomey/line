@@ -48,7 +48,7 @@ $(eval $(call Object,$(cliCommon),Timestamp))
 
 $(eval $(call Object,$(cli),init,cliCommonFuncs))
 
-$(eval $(call Object,$(cli),log,cliCommonFuncs))
+$(eval $(call Object,$(cli),log,cliCommonFuncs Timestamp FileLineReader))
 
 $(eval $(call Object,$(cli),status,cliCommonFuncs FileRecursiveIterator Hasher PathCutter))
 

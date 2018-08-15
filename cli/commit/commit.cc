@@ -60,8 +60,8 @@ static void storeFileData(const line::core::DirectoryStructure<line::core::Hashe
 
 static void writeCommitInfo(std::ofstream& file, const Commit& commit) {
     file << commit.timestamp << std::endl;
-    file << commit.author << std::endl;
     file << commit.description << std::endl;
+    file << commit.author << std::endl;
 }
 
 static void addCommitToLog(const Commit& commit) {

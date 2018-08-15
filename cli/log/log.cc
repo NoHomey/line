@@ -1,10 +1,24 @@
 #include "./log.h"
 #include <iostream>
+#include <cassert>
 #include "../common/Navigator/Navigator.h"
+#include "../common/FileLineReader/FileLineReader.h"
+#include "../common/Timestamp/Timestamp.h"
 #include "../common/funcs/funcs.h"
 
 static void listCommits(std::size_t commitsCounter) {
-    // IMPLEMENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    assert(commitsCounter);
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    line::cli::common::FileLineReader commitsLogReader{navigator.navigateToCommitsLog()};
+    std::cout << "Commits:" << std::endl;
+    for(std::size_t counter = 1; counter <= commitsCounter; ++counter) {
+        line::cli::common::Timestamp timestamp = line::cli::common::Timestamp::fromString((*commitsLogReader).beginning);
+        ++commitsLogReader;
+        std::cout << counter << ": \"" << (*commitsLogReader);
+        ++commitsLogReader;
+        std::cout << "\" from " << timestamp << " by " << (*commitsLogReader) << std::endl;
+        ++commitsLogReader;
+    }
 }
 
 static void logCommits() {
