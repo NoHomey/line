@@ -48,6 +48,8 @@ private:
 
     void removeFromPaths() noexcept;
 
+    void clean() noexcept;
+
 private:
     static const std::size_t initialFilePathCapacity = 4096;
 

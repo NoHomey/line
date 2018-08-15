@@ -207,6 +207,8 @@ private:
     bool moveToNextDirectory();
 
     void changeDirectory();
+    
+    void clean() noexcept;
 
 private:
     line::dataStructures::Stack<IterationState> directoryPath;
@@ -482,6 +484,9 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator+
     else {
         changeDirectory();
     }
+    if(!(*this)) {
+        clean();
+    }
     return *this;
 }
 
@@ -614,4 +619,12 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::changeDir
         }
         removeLastDirectory();
     }
+}
+
+template<typename FileInfo>
+template<bool Const>
+void
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::clean() noexcept {
+    filePath.clean();
+    directoryPath.clean();
 }

@@ -14,7 +14,7 @@ line::core::FileRecursiveIterator::FileRecursiveIterator(const char* directory)
     int error = readCurrentDirectory(ignoreSpecialEntriesAndLineInfoDirectory);
     if(error) {
         // handle
-        filePath.clean();
+        clean();
     } else {
         walkUntilFileIsReached();
     }
@@ -32,6 +32,9 @@ line::core::String::StringSlice line::core::FileRecursiveIterator::operator*() c
 line::core::FileRecursiveIterator& line::core::FileRecursiveIterator::operator++() {
     removeFromPaths();
     walkUntilFileIsReached();
+    if(!(*this)) {
+        clean();
+    }
     return *this;
 }
 
@@ -92,7 +95,7 @@ int line::core::FileRecursiveIterator::readCurrentDirectory(bool (*ignoreEntry) 
 
 void line::core::FileRecursiveIterator::walkUntilFileIsReached() {
     if(directoriesPath.isEmpty()) {
-        filePath.clean();
+        clean();
         return;
     }
     while(!directoriesPath.isEmpty()) {
@@ -110,7 +113,7 @@ void line::core::FileRecursiveIterator::walkUntilFileIsReached() {
         }
     }
     if(directoriesPath.isEmpty()) {
-        filePath.clean();
+        clean();
     }
 }
 
@@ -120,6 +123,11 @@ void line::core::FileRecursiveIterator::removeFromFilePath() noexcept {
     }
     filePath.pop();
     filePath.push('\0');
+}
+
+void line::core::FileRecursiveIterator::clean() noexcept {
+    filePath.clean();
+    directoriesPath.clean();
 }
 
 void line::core::FileRecursiveIterator::removeFromPaths() noexcept {

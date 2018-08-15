@@ -19,13 +19,11 @@ line::cli::common::FileLineReader::FileLineReader(FileLineReader&& other)
 length{other.length},
 capacity{other.capacity}, 
 file{std::move(other.file)} {
-    other.buffer = nullptr;
-    other.length = 0;
-    other.capacity = 0;
+    other.null();
 }
 
 line::cli::common::FileLineReader::~FileLineReader() noexcept {
-    delete[] buffer;
+    clean();
 }
 
 line::cli::common::FileLineReader::operator bool() const noexcept {
@@ -51,6 +49,7 @@ void line::cli::common::FileLineReader::readLine() {
         length += file.gcount();
         if(file.eof()) {
             file.close();
+            clean();
             break;
         }
         if(static_cast<std::size_t>(file.gcount()) == (count - 1)) {
@@ -66,4 +65,15 @@ void line::cli::common::FileLineReader::readLine() {
         }
         break;
     }
+}
+
+void line::cli::common::FileLineReader::null() noexcept {
+    buffer = nullptr;
+    length = 0;
+    capacity = 0;
+}
+
+void line::cli::common::FileLineReader::clean() noexcept {
+    delete[] buffer;
+    null();
 }

@@ -46,6 +46,8 @@ public:
 private:
     void moveLeft(NodeType* node);
 
+    void clean() noexcept;
+
 private:
     line::dataStructures::Stack<NodeType*> stack;
 };
@@ -86,6 +88,8 @@ line::dataStructures::BST::BSTIterator<Const, Node, Data>::operator++() {
         NodeType* top = stack.top();
         stack.pop();
         moveLeft(top->rightNode());
+    } else {
+        clean();
     }
     return *this;
 }
@@ -97,4 +101,10 @@ line::dataStructures::BST::BSTIterator<Const, Node, Data>::moveLeft(NodeType* no
         stack.push(node);
         node = node->leftNode();
     }
+}
+
+template<bool Const, typename Node, typename Data>
+void
+line::dataStructures::BST::BSTIterator<Const, Node, Data>::clean() noexcept {
+    stack.clean();
 }

@@ -35,6 +35,10 @@ public:
 private:
     void readLine();
 
+    void null() noexcept;
+
+    void clean() noexcept;
+
 private:
     static const std::size_t initialBufferCapacity = 8;
 
