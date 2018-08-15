@@ -39,6 +39,11 @@
         "ctime": "cpp",
         "iomanip": "cpp",
         "cstdarg": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "chrono": "cpp",
+        "memory": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "thread": "cpp"
     }
 }

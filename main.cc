@@ -1,6 +1,36 @@
 
 #include <iostream>
 #include <cassert>
+/*#include "./core/PatternMatcher/PatternMatcher.h"
+
+int main() {
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"acb", 3},
+        line::core::String::StringSlice{"a*b", 3}
+    ));
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ab", 2},
+        line::core::String::StringSlice{"a*b", 3}
+    ));
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ab", 2},
+        line::core::String::StringSlice{"a**b", 4}
+    ));
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ab", 2},
+        line::core::String::StringSlice{"a***b", 5}
+    ));
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"acdb", 4},
+        line::core::String::StringSlice{"a**b", 4}
+    ));
+    assert(line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"acdb", 4},
+        line::core::String::StringSlice{"a*", 2}
+    ));
+
+    return 0;
+}*/
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"

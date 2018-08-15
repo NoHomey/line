@@ -1,0 +1,142 @@
+#pragma once
+
+#include <cstddef>
+
+namespace line {
+
+namespace dataStructures {
+
+template<typename T, std::size_t Capacity>
+class FixedCapacityStack {
+public:
+    FixedCapacityStack();
+
+    FixedCapacityStack(const FixedCapacityStack& other) = default;
+
+    FixedCapacityStack(FixedCapacityStack&& other) = default;
+
+    ~FixedCapacityStack() noexcept = default;
+
+    FixedCapacityStack& operator=(const FixedCapacityStack& other) = default;
+
+    FixedCapacityStack& operator=(FixedCapacityStack&& other) = default;
+
+public:
+    bool isEmpty() const noexcept;
+
+    bool isFull() const noexcept;
+
+    std::size_t size() const noexcept;
+
+    std::size_t capacity() const noexcept;
+
+    const T& top() const noexcept;
+
+public:
+    void push(const T& data);
+
+    void push(T&& data) noexcept;
+
+    void pop() noexcept;
+
+    T& top() noexcept;
+
+    void empty() noexcept;
+
+private:
+    template<typename Data>
+    void pushData(Data data) noexcept;
+
+private:
+    std::size_t stackSize;
+    T stackData[Capacity];
+};
+
+}
+
+}
+
+
+// IMPLEMENTAION
+
+
+#include <cassert>
+#include <utility>
+
+template<typename T, std::size_t Capacity>
+line::dataStructures::FixedCapacityStack<T, Capacity>::FixedCapacityStack()
+: stackSize{0}, stackData{} {
+    assert(Capacity);
+} 
+
+template<typename T, std::size_t Capacity>
+bool
+line::dataStructures::FixedCapacityStack<T, Capacity>::isEmpty() const noexcept {
+    return !stackSize;
+}
+
+template<typename T, std::size_t Capacity>
+bool
+line::dataStructures::FixedCapacityStack<T, Capacity>::isFull() const noexcept {
+    return stackSize == Capacity;
+}
+
+template<typename T, std::size_t Capacity>
+std::size_t
+line::dataStructures::FixedCapacityStack<T, Capacity>::size() const noexcept {
+    return stackSize;
+}
+
+template<typename T, std::size_t Capacity>
+std::size_t
+line::dataStructures::FixedCapacityStack<T, Capacity>::capacity() const noexcept {
+    return Capacity;
+}
+
+template<typename T, std::size_t Capacity>
+const T&
+line::dataStructures::FixedCapacityStack<T, Capacity>::top() const noexcept {
+    assert(!isEmpty());
+    return stackData[stackSize - 1];
+}
+
+template<typename T, std::size_t Capacity>
+void
+line::dataStructures::FixedCapacityStack<T, Capacity>::push(const T& data) {
+    pushData<const T&>(data);
+}
+
+template<typename T, std::size_t Capacity>
+void
+line::dataStructures::FixedCapacityStack<T, Capacity>::push(T&& data) noexcept {
+    pushData<T&&>(std::move(data));
+}
+
+template<typename T, std::size_t Capacity>
+void
+line::dataStructures::FixedCapacityStack<T, Capacity>::pop() noexcept {
+    assert(!isEmpty());
+    --stackSize;
+}
+
+template<typename T, std::size_t Capacity>
+T&
+line::dataStructures::FixedCapacityStack<T, Capacity>::top() noexcept {
+    assert(!isEmpty());
+    return stackData[stackSize - 1];
+}
+
+template<typename T, std::size_t Capacity>
+void
+line::dataStructures::FixedCapacityStack<T, Capacity>::empty() noexcept {
+    stackSize = 0;
+}
+
+template<typename T, std::size_t Capacity>
+template<typename Data>
+void
+line::dataStructures::FixedCapacityStack<T, Capacity>::pushData(Data data) noexcept {
+    assert(!isFull());
+    stackData[stackSize] = std::forward<Data>(data);
+    ++stackSize;
+}

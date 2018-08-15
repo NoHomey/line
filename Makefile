@@ -4,7 +4,7 @@ COMPILER = g++ -std=c++14 -Wall -Wextra -Wpedantic -g
 
 Executable = line
 
-CoreObjects = Hasher FileRecursiveIterator FilePathIterator String
+CoreObjects = PatternMatcher Hasher FileRecursiveIterator FilePathIterator String
 
 CliObjects = Navigator PathCutter Timestamp FileLineReader cliCommonFuncs init log status commit
 
@@ -37,6 +37,8 @@ $(eval $(call Object,$(core),FilePathIterator,String))
 $(eval $(call Object,$(core),FileRecursiveIterator,String))
 
 $(eval $(call Object,$(core),Hasher,String))
+
+$(eval $(call Object,$(core),PatternMatcher,String))
 
 $(eval $(call Object,$(cliCommon),Navigator,Hasher))
 
