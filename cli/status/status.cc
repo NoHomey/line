@@ -5,6 +5,7 @@
 #include "../../core/DirectoryStructure.thd"
 #include "../common/Navigator/Navigator.h"
 #include "../common/PathCutter/PathCutter.h"
+#include "../common/FileLineReader/FileLineReader.h"
 #include "../common/funcs/funcs.h"
 
 enum class FileAction {Add, Update, Remove, Keep};
@@ -17,19 +18,37 @@ struct FileStatus {
     : fileHash{fileHash}, action{action} { }
 };
 
-using FilesStatus = line::core::DirectoryStructure<FileStatus>;
-
-static void readCommitDirectorySnapshot(std::size_t commitId, FilesStatus& filesStatus) {
-    // IMPELMENT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+static void readCommitDirectorySnapshot(std::size_t commitId, line::core::DirectoryStructure<FileStatus>& filesStatus) {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    line::cli::common::FileLineReader commitFile{navigator.navigateToCommit(commitId)};
+    ++commitFile;
+    ++commitFile;
+    ++commitFile;
+    while(commitFile) {
+        line::core::String::StringSlice fileInfo = *commitFile;
+        line::core::String::StringSlice relativeFilePath{
+            fileInfo.beginning,
+            fileInfo.count - (line::core::Hasher::Hash::hexHashCodeLength + 1)
+        };
+        line::core::String::StringSlice hexHashCode{
+            fileInfo.beginning + (relativeFilePath.count + 1),
+            line::core::Hasher::Hash::hexHashCodeLength
+        };
+        filesStatus.insert(
+            line::core::FilePathIterator{relativeFilePath},
+            FileStatus{line::core::Hasher::Hash::fromHexHashCode(hexHashCode), FileAction::Remove}
+        );
+        ++commitFile;
+    }
 }
 
-static FilesStatus getFilesStatus(std::size_t commitsCounter) {
+static line::core::DirectoryStructure<FileStatus> getFilesStatus(std::size_t commitsCounter) {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    FilesStatus filesStatus{navigator.navigateToDirectory()};
+    line::core::DirectoryStructure<FileStatus> filesStatus{navigator.navigateToDirectory()};
     if(commitsCounter) {
         readCommitDirectorySnapshot(commitsCounter, filesStatus);
     }
-    line::core::FileRecursiveIterator directoryIterator(navigator.path());
+    line::core::FileRecursiveIterator directoryIterator(navigator.navigateToDirectory());
     while(directoryIterator) {
         line::core::String::StringSlice absoluteFilePath = *directoryIterator;
         line::core::String::StringSlice relativeFilePath = line::cli::common::PathCutter::cutPath(*directoryIterator);
@@ -67,11 +86,11 @@ static void printFileStatus(const line::core::String::StringSlice& relativeFileN
 
 static void reportStatus() {
     std::size_t commitsCounter = line::cli::common::funcs::readCommitsCounter();
-    FilesStatus filesStatus = getFilesStatus(commitsCounter);
+    line::core::DirectoryStructure<FileStatus> filesStatus = getFilesStatus(commitsCounter);
     bool changes = false;
-    FilesStatus::ConstFileIterator iter = filesStatus.constFileIterator();
+    line::core::DirectoryStructure<FileStatus>::ConstFileIterator iter = filesStatus.constFileIterator();
     while(iter) {
-        FilesStatus::ConstFileIterator::ConstData fileInfo = *iter;
+        line::core::DirectoryStructure<FileStatus>::ConstFileIterator::ConstData fileInfo = *iter;
         if(fileInfo.second.action != FileAction::Keep) {
             if(!changes) {
                 changes = true;

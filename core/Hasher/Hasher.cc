@@ -47,6 +47,17 @@ line::core::String::StringSlice line::core::Hasher::Hash::toHexHashCode(const Ha
     return {hexHashCode, hexHashCodeLength};
 }
 
+line::core::Hasher::Hash line::core::Hasher::Hash::fromHexHashCode(const line::core::String::StringSlice& hexHashCode) noexcept {
+    assert(hexHashCode.count == hexHashCodeLength);
+    for(unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        line::core::Hasher::hashCode[i] =
+            (hexDigitToBits(hexHashCode.beginning[2 * i]) << 4)
+            |
+            hexDigitToBits(hexHashCode.beginning[2 * i + 1]);
+    }
+    return {line::core::Hasher::hashCode};
+}
+
 const unsigned char* line::core::Hasher::Hash::hash() const noexcept {
     return hashCode;
 }
@@ -70,4 +81,13 @@ line::utils::types::ComparsionResult line::core::Hasher::Hash::compare(const Has
 
 std::pair<char, char> line::core::Hasher::Hash::toHex(unsigned char data) noexcept {
     return {bitsToHex((data >> 4) & 15), bitsToHex(data & 15)};
+}
+
+bool line::core::Hasher::Hash::isDigit(char c) noexcept {
+    return (c >= '0') && (c <= '9');
+}
+
+unsigned char line::core::Hasher::Hash::hexDigitToBits(char hexDigit) noexcept {
+    assert(isDigit(hexDigit) || ((hexDigit >= 'a') && (hexDigit <=  'f')));
+    return isDigit(hexDigit) ? (hexDigit - '0') : ((hexDigit - 'a') + 10);
 }

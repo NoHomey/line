@@ -47,6 +47,10 @@ void line::cli::common::FileLineReader::readLine() {
     while(file) {
         file.getline(inputBuffer, count);
         length += file.gcount();
+        if(file) {
+            --length;
+            break;
+        }
         if(file.eof()) {
             file.close();
             clean();
@@ -61,9 +65,7 @@ void line::cli::common::FileLineReader::readLine() {
             count = capacity + 1;
             capacity *= 2;
             file.clear();
-            continue;
         }
-        break;
     }
 }
 

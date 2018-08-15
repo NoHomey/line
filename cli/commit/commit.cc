@@ -107,6 +107,8 @@ static void createNewCommit(const Commit& commit) {
     addCommitToLog(commit);
     updateCommitsCounter(commitsCounter + 1);
     std::cout << "Changes commited with id: " << (commitsCounter + 1) << std::endl;
+    std::cout  << '"' << commit.description << "\" at " << commit.timestamp
+     << " by " << commit.author  << std::endl;
 }
 
 void line::cli::commit(int argc, char** argv) {

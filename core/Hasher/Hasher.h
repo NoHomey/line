@@ -27,6 +27,8 @@ public:
 public:
     static line::core::String::StringSlice toHexHashCode(const Hash& hash) noexcept;
 
+    static Hash fromHexHashCode(const line::core::String::StringSlice& hexHashCode) noexcept;
+
 public:
     Hash() noexcept = delete;
 
@@ -55,6 +57,10 @@ private:
     static char bitsToHex(unsigned char bits) noexcept;
 
     static std::pair<char, char> toHex(unsigned char data) noexcept;
+
+    static bool isDigit(char c) noexcept;
+
+    static unsigned char hexDigitToBits(char hexDigit) noexcept;
 
 private:
     static char hexHashCode[hexHashCodeLength + 1];
