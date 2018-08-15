@@ -1,3 +1,5 @@
+// WARNING Timestamp can hold years from 1900 to 5995 !!!!!!!!!
+
 #pragma once
 
 #include <iostream>
@@ -11,6 +13,12 @@ namespace common {
 class Timestamp {
 public:
     friend std::istream& operator>>(std::istream& input, Timestamp& timestamp);
+
+public:
+    static Timestamp fromString(const char* timestampString) noexcept;
+
+    static Timestamp now() noexcept;
+
 public:
     Timestamp() noexcept;
 
@@ -36,11 +44,23 @@ public:
     unsigned int getYear() const noexcept;
 
 private:
+    void setHours(unsigned int newHours) noexcept;
+
+    void setMinutes(unsigned int newMinutes) noexcept;
+
+    void setDay(unsigned int newDay) noexcept;
+
+    void setMonth(unsigned int newMonth) noexcept;
+
+    void setYear(unsigned int newYear) noexcept;
+
+private:
     unsigned int hours : 5;
-    unsigned int minutes : 5;
+    unsigned int minutes : 6;
     unsigned int day : 5;
     unsigned int month : 4;
-    unsigned int year : 13;
+    // WARNING Timestamp can hold years from 1900 to 5995 !!!!!!!!!
+    unsigned int year : 12;
 };
 
 std::istream& operator>>(std::istream& input, Timestamp& timestamp);

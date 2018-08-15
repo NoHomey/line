@@ -16,7 +16,7 @@ struct Commit {
     line::cli::common::Timestamp timestamp;
 
     Commit(const char* author, const char* description) noexcept
-    : author{author}, description{description}, timestamp{} { }
+    : author{author}, description{description}, timestamp{line::cli::common::Timestamp::now()} { }
 };
 
 static line::core::DirectoryStructure<line::core::Hasher::Hash> readDirectoryStructure() {

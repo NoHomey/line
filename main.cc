@@ -1,6 +1,21 @@
 
 #include <iostream>
-#include <cassert>
+#include "./cli/common/Timestamp/Timestamp.h"
+
+int main() {
+    line::cli::common::Timestamp timestamp = line::cli::common::Timestamp::fromString("23:55 15.08.2018");
+
+    std::cout << timestamp << std::endl;
+
+    std::cin >> timestamp;
+
+    std::cout << timestamp << std::endl;
+
+    std::cout << line::cli::common::Timestamp{} << std::endl;
+
+    return 0;
+}
+/*#include <cassert>
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
@@ -51,4 +66,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
+}*/
