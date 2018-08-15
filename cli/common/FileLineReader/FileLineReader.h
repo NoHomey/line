@@ -36,11 +36,11 @@ private:
     void readLine();
 
 private:
-    static const std::size_t initialBufferCapacity = 4096;
+    static const std::size_t initialBufferCapacity = 8;
 
 private:
     char* buffer;
-    std::size_t position;
+    std::size_t length;
     std::size_t capacity;
     std::ifstream file;
 };

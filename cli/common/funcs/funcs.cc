@@ -57,7 +57,7 @@ bool line::cli::common::funcs::isRepository() {
                 << navigator.navigateToDirectory() << " is line repository." << std::endl;
             return false;
         case DirectoryCheckResult::NotADirectory:
-            std::cout << std::cout << navigator.navigateToDirectory()
+            std::cout << navigator.navigateToDirectory()
                 << " dose not seems to be a valid line repository. "
                 << navigator.navigateToRepoInfoDir() << " is not a directory." << std::endl;
             return false;

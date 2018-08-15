@@ -5,7 +5,7 @@
 
 line::cli::common::FileLineReader::FileLineReader(const char* filePath)
 : buffer{nullptr},
-position{0},
+length{0},
 capacity{initialBufferCapacity},
 file{} {
     file.exceptions(std::ifstream::badbit);
@@ -16,11 +16,11 @@ file{} {
 
 line::cli::common::FileLineReader::FileLineReader(FileLineReader&& other)
 : buffer{other.buffer},
-position{other.position},
+length{other.length},
 capacity{other.capacity}, 
 file{std::move(other.file)} {
     other.buffer = nullptr;
-    other.position = 0;
+    other.length = 0;
     other.capacity = 0;
 }
 
@@ -29,12 +29,12 @@ line::cli::common::FileLineReader::~FileLineReader() noexcept {
 }
 
 line::cli::common::FileLineReader::operator bool() const noexcept {
-    return position;
+    return length;
 }
 
 line::core::String::StringSlice line::cli::common::FileLineReader::operator*() const noexcept {
     assert(*this);
-    return {buffer, position};
+    return {buffer, length};
 }
 
 line::cli::common::FileLineReader& line::cli::common::FileLineReader::operator++() {
@@ -43,12 +43,12 @@ line::cli::common::FileLineReader& line::cli::common::FileLineReader::operator++
 }
 
 void line::cli::common::FileLineReader::readLine() {
-    position = 0;
     char* inputBuffer = buffer;
     std::size_t count = capacity;
+    length = 0;
     while(file) {
         file.getline(inputBuffer, count);
-        position += file.gcount();
+        length += file.gcount();
         if(file.eof()) {
             file.close();
             break;

@@ -6,7 +6,7 @@ Executable = line
 
 CoreObjects = Hasher FileRecursiveIterator FilePathIterator String
 
-CliObjects = Navigator PathCutter Timestamp cliCommonFuncs init log status commit
+CliObjects = Navigator PathCutter Timestamp FileLineReader cliCommonFuncs init log status commit
 
 Objects = $(CliObjects) $(CoreObjects)
 
@@ -41,6 +41,8 @@ $(eval $(call Object,$(core),Hasher,String))
 $(eval $(call Object,$(cliCommon),Navigator,Hasher))
 
 $(eval $(call Object,$(cliCommon),PathCutter,String))
+
+$(eval $(call Object,$(cliCommon),FileLineReader,String))
 
 $(eval $(call Object,$(cliCommon),Timestamp))
 
