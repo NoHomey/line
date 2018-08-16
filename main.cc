@@ -1,153 +1,66 @@
 
 #include <iostream>
 #include <cassert>
-#include "./core/PatternMatcher/PatternMatcher.h"
+#include "./cli/common/FilePathMatcher/FilePathMatcher.h"
 
 int main() {
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"acb", 3},
-        line::core::String::StringSlice{"a*b", 3}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ab", 2},
-        line::core::String::StringSlice{"a*b", 3}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ab", 2},
-        line::core::String::StringSlice{"a**b", 4}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ab", 2},
-        line::core::String::StringSlice{"a***b", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"acdb", 4},
-        line::core::String::StringSlice{"a**b", 4}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"acdb", 4},
-        line::core::String::StringSlice{"a*", 2}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abc", 3},
-        line::core::String::StringSlice{"a*b*c", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbc", 9},
-        line::core::String::StringSlice{"a*b*c", 5}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbd", 9},
-        line::core::String::StringSlice{"a*b*c", 5}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbd", 9},
-        line::core::String::StringSlice{"a*b*c?", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbcd", 10},
-        line::core::String::StringSlice{"a*b*c?", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbcd", 10},
-        line::core::String::StringSlice{"a*b*c?", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abbbdccbcd", 10},
-        line::core::String::StringSlice{"?*?*?", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abc", 3},
-        line::core::String::StringSlice{"?*?*?", 5}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ab", 2},
-        line::core::String::StringSlice{"?*?*?", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcd", 4},
-        line::core::String::StringSlice{"?*?*?", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcd", 4},
-        line::core::String::StringSlice{"*", 1}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcd", 4},
-        line::core::String::StringSlice{"a**?*?", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcd", 4},
-        line::core::String::StringSlice{"a**?*?*?", 7}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcd", 4},
-        line::core::String::StringSlice{"a**?*?**?*?", 11}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcddd", 6},
-        line::core::String::StringSlice{"a**?*?**?*?d", 12}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcddd", 6},
-        line::core::String::StringSlice{"a**?*?**?*?d*", 13}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"abcddd", 6},
-        line::core::String::StringSlice{"?*****", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"a", 1},
-        line::core::String::StringSlice{"*?*", 3}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aaa", 3},
-        line::core::String::StringSlice{"*?*?*?*", 7}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aa", 2},
-        line::core::String::StringSlice{"*?*?*?*", 7}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aa", 2},
-        line::core::String::StringSlice{"*??*", 4}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aa", 2},
-        line::core::String::StringSlice{"*?*?*", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aaacbca", 7},
-        line::core::String::StringSlice{"*bc*", 4}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"aaabbcbca", 9},
-        line::core::String::StringSlice{"*b?c*", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"cccbcc", 6},
-        line::core::String::StringSlice{"*cbc*", 5}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"cccbcc", 6},
-        line::core::String::StringSlice{"*cbc*c", 6}
-    ) << std::endl;
-    std::cout << line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ccbccbcc", 8},
-        line::core::String::StringSlice{"*cb?c*c", 7}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"ccbcbcc", 7},
-        line::core::String::StringSlice{"*cb?c*c", 7}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"cbcaccc", 7},
-        line::core::String::StringSlice{"*cb?c*c", 7}
-    ) << std::endl;
-    std::cout << !line::core::PatternMatcher::test(
-        line::core::String::StringSlice{"c", 1},
-        line::core::String::StringSlice{"*c*c", 4}
-    ) << std::endl;
+    {
+        line::cli::common::FilePathMatcher matcher{};
+        std::cout << matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+    }
+    {
+        line::cli::common::FilePathMatcher matcher{line::core::String::StringSlice{"*", 1}};
+        std::cout << matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+    }
+    {
+        line::cli::common::FilePathMatcher matcher{line::core::String::StringSlice{"*/file*.txt", 11}};
+        std::cout << !matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+    }
+    {
+        line::cli::common::FilePathMatcher matcher{line::core::String::StringSlice{"folder/*/b", 10}};
+        std::cout << !matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/file.txt", 19}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/c/d/file.txt", 23}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/abc/b/c/file.txt", 23}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/abc/b/file.txt", 21}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/abc/b/c/d/file.txt", 25}) << std::endl;
+    }
+    {
+        line::cli::common::FilePathMatcher matcher{line::core::String::StringSlice{"folder/*/?/*/d", 14}};
+        std::cout << !matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/a/b/file.txt", 19}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/a/b/c/d/file.txt", 23}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/aaa/b/cd/d/file.txt", 26}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/aaa/b/file.txt", 21}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/aaa/b/cd/d/file.txt", 26}) << std::endl;
+    }
+    {
+        line::cli::common::FilePathMatcher matcher{line::core::String::StringSlice{"folder/man*/page?*/*/dir/*", 26}};
+
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/man/page1/some/dir/file.txt", 34}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/man/page12/a/dir/folder/file.txt", 39}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/man/page12/a/dir/folder/some/verry/long/path/file.txt", 60}) << std::endl;
+        std::cout << matcher.match(line::core::String::StringSlice{"folder/man_node/page123/chapter1/dir/some_ver_long_file_name.txt", 64}) << std::endl;
+
+        std::cout << !matcher.match(line::core::String::StringSlice{"file.txt", 8}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/file.txt", 15}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/a/b/c/file.txt", 21}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/man/page1/some/dir123/file.txt", 37}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/man/page/a/dir/folder/file.txt", 37}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/man/page12/dir/folder/some/verry/long/path/file.txt", 58}) << std::endl;
+        std::cout << !matcher.match(line::core::String::StringSlice{"folder/some_book/page123/chapter1/dir/some_ver_long_file_name.txt", 65}) << std::endl;
+    }
+
     return 0;
 }
 
