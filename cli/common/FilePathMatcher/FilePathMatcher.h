@@ -25,7 +25,7 @@ public:
     FilePathMatcher& operator=(FilePathMatcher&& other) noexcept = default;
 
 public:
-    bool match(const line::core::String::StringSlice& filePath) noexcept;
+    bool match(const line::core::String::StringSlice& filePath) const noexcept;
 
 private:
 class SegmentIterator {
