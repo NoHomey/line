@@ -1,37 +1,157 @@
 
 #include <iostream>
 #include <cassert>
-/*#include "./core/PatternMatcher/PatternMatcher.h"
+#include "./core/PatternMatcher/PatternMatcher.h"
 
 int main() {
-    assert(line::core::PatternMatcher::test(
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"acb", 3},
         line::core::String::StringSlice{"a*b", 3}
-    ));
-    assert(line::core::PatternMatcher::test(
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"ab", 2},
         line::core::String::StringSlice{"a*b", 3}
-    ));
-    assert(line::core::PatternMatcher::test(
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"ab", 2},
         line::core::String::StringSlice{"a**b", 4}
-    ));
-    assert(line::core::PatternMatcher::test(
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"ab", 2},
         line::core::String::StringSlice{"a***b", 5}
-    ));
-    assert(line::core::PatternMatcher::test(
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"acdb", 4},
         line::core::String::StringSlice{"a**b", 4}
-    ));
-    assert(line::core::PatternMatcher::test(
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
         line::core::String::StringSlice{"acdb", 4},
         line::core::String::StringSlice{"a*", 2}
-    ));
-
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abc", 3},
+        line::core::String::StringSlice{"a*b*c", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbc", 9},
+        line::core::String::StringSlice{"a*b*c", 5}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbd", 9},
+        line::core::String::StringSlice{"a*b*c", 5}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbd", 9},
+        line::core::String::StringSlice{"a*b*c?", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbcd", 10},
+        line::core::String::StringSlice{"a*b*c?", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbcd", 10},
+        line::core::String::StringSlice{"a*b*c?", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abbbdccbcd", 10},
+        line::core::String::StringSlice{"?*?*?", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abc", 3},
+        line::core::String::StringSlice{"?*?*?", 5}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ab", 2},
+        line::core::String::StringSlice{"?*?*?", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcd", 4},
+        line::core::String::StringSlice{"?*?*?", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcd", 4},
+        line::core::String::StringSlice{"*", 1}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcd", 4},
+        line::core::String::StringSlice{"a**?*?", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcd", 4},
+        line::core::String::StringSlice{"a**?*?*?", 7}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcd", 4},
+        line::core::String::StringSlice{"a**?*?**?*?", 11}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcddd", 6},
+        line::core::String::StringSlice{"a**?*?**?*?d", 12}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcddd", 6},
+        line::core::String::StringSlice{"a**?*?**?*?d*", 13}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"abcddd", 6},
+        line::core::String::StringSlice{"?*****", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"a", 1},
+        line::core::String::StringSlice{"*?*", 3}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aaa", 3},
+        line::core::String::StringSlice{"*?*?*?*", 7}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aa", 2},
+        line::core::String::StringSlice{"*?*?*?*", 7}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aa", 2},
+        line::core::String::StringSlice{"*??*", 4}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aa", 2},
+        line::core::String::StringSlice{"*?*?*", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aaacbca", 7},
+        line::core::String::StringSlice{"*bc*", 4}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"aaabbcbca", 9},
+        line::core::String::StringSlice{"*b?c*", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"cccbcc", 6},
+        line::core::String::StringSlice{"*cbc*", 5}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"cccbcc", 6},
+        line::core::String::StringSlice{"*cbc*c", 6}
+    ) << std::endl;
+    std::cout << line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ccbccbcc", 8},
+        line::core::String::StringSlice{"*cb?c*c", 7}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"ccbcbcc", 7},
+        line::core::String::StringSlice{"*cb?c*c", 7}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"cbcaccc", 7},
+        line::core::String::StringSlice{"*cb?c*c", 7}
+    ) << std::endl;
+    std::cout << !line::core::PatternMatcher::test(
+        line::core::String::StringSlice{"c", 1},
+        line::core::String::StringSlice{"*c*c", 4}
+    ) << std::endl;
     return 0;
-}*/
-#include <cstring>
+}
+
+/*#include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
 #include "./cli/status/status.h"
@@ -81,4 +201,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
+}*/

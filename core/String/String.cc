@@ -6,6 +6,7 @@
 line::core::String::StringSlice::StringSlice(const char* beginning, std::size_t count) noexcept
 : beginning{beginning}, count{count} {
     assert(beginning);
+    assert(beginning[0]);
     assert(count);
 }
 

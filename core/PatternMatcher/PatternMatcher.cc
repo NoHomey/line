@@ -33,28 +33,38 @@ bool line::core::PatternMatcher::run(
     std::size_t stringCurrentPosition = stringPosition;
     while(patternCurrentPosition < pattern.count) {
         if(stringCurrentPosition == string.count) {
-            return false;
+            while(patternCurrentPosition < pattern.count) {
+                if(pattern.beginning[patternCurrentPosition] != '*') {
+                    return false;
+                }
+                ++patternCurrentPosition;
+            }
+            return true;
         }
         const char patternSymbol = pattern.beginning[patternCurrentPosition];
         const char stringSymbol = string.beginning[stringCurrentPosition];
-        ++stringCurrentPosition;
-        ++patternCurrentPosition;
         if(patternSymbol == '?') {
+            ++stringCurrentPosition;
+            ++patternCurrentPosition;
             continue;
         }
         if(patternSymbol != '*') {
             if(patternSymbol != stringSymbol) {
                 return false;
             }
+            ++stringCurrentPosition;
+            ++patternCurrentPosition;
             continue;
         }
         while((patternCurrentPosition < pattern.count) && (pattern.beginning[patternCurrentPosition] == '*')) {
             ++patternCurrentPosition;
         }
-        if((patternCurrentPosition < pattern.count) && (stringCurrentPosition < string.count)) {
-            splits.push(Split{stringCurrentPosition, patternCurrentPosition - 1});
+        if(patternCurrentPosition == pattern.count) {
+            return true;
         }
-        --stringCurrentPosition;
+        if((patternCurrentPosition < pattern.count) && (stringCurrentPosition < string.count)) {
+            splits.push(Split{stringCurrentPosition + 1, patternCurrentPosition - 1});
+        }
     }
     return stringCurrentPosition == string.count;
 }
