@@ -1,6 +1,46 @@
 
 #include <iostream>
-#include <cassert>
+#include "./core/PathBuilder/PathBuilder.h"
+
+int main() {
+    line::core::PathBuilder pathBuilder{8};
+    pathBuilder.addToPath("~/tmp/project");
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.addToPath("dir");
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.addToPath("aaa");
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.addToPath("abc");
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.addToPath("some_folder");
+    std::cout << pathBuilder.path() << std::endl;
+
+    pathBuilder.removeLast();
+    std::cout << pathBuilder.path() << std::endl;
+
+    return 0;
+}
+
+/*#include <cassert>
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
@@ -51,4 +91,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
+}*/
