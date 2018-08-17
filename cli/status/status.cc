@@ -25,18 +25,10 @@ static void readCommitDirectorySnapshot(std::size_t commitId, line::core::Direct
     ++commitFile;
     ++commitFile;
     while(commitFile) {
-        line::core::String::StringSlice fileInfo = *commitFile;
-        line::core::String::StringSlice relativeFilePath{
-            fileInfo.beginning,
-            fileInfo.count - (line::core::Hasher::Hash::hexHashCodeLength + 1)
-        };
-        line::core::String::StringSlice hexHashCode{
-            fileInfo.beginning + (relativeFilePath.count + 1),
-            line::core::Hasher::Hash::hexHashCodeLength
-        };
+        line::cli::common::FileInfoFromCommitLine fileInfo = line::cli::common::funcs::parseFileInfoFromCommitLine(*commitFile);
         filesStatus.insert(
-            line::core::FilePathIterator{relativeFilePath},
-            FileStatus{line::core::Hasher::Hash::fromHexHashCode(hexHashCode), FileAction::Remove}
+            line::core::FilePathIterator{fileInfo.first},
+            FileStatus{line::core::Hasher::Hash::fromHexHashCode(fileInfo.second), FileAction::Remove}
         );
         ++commitFile;
     }

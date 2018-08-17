@@ -6,9 +6,7 @@
 #include <cassert>
 #include "../Navigator/Navigator.h"
 
-enum class DirectoryCheckResult {NotExist, Error, NotADirectory, Directory};
-
-static DirectoryCheckResult checkIsDirectory(const char* directoryPath) {
+line::cli::common::DirectoryCheckResult line::cli::common::funcs::checkIsDirectory(const char* directoryPath) {
     struct stat statStruct;
     errno = 0;
     if(lstat(directoryPath, &statStruct)) {
@@ -75,4 +73,42 @@ std::size_t line::cli::common::funcs::readCommitsCounter() {
     commitsCounterFile >> commitsCounter;
     commitsCounterFile.close();
     return commitsCounter;
+}
+
+bool line::cli::common::funcs::fileExists(const char* filePath) {
+    std::ifstream file{filePath};
+    bool isGood = file.good();
+    file.close();
+    return isGood;
+}
+
+void line::cli::common::funcs::copyFile(const char* destFilePath, const char* srcFilePath) {
+    std::ofstream destFile;
+    std::ifstream srcFile;
+    static char buffer[4096];
+    destFile.exceptions(std::ofstream::badbit);
+    srcFile.exceptions(std::ifstream::badbit);
+    destFile.open(destFilePath);
+    srcFile.open(srcFilePath);
+    while(srcFile) {
+        srcFile.read(buffer, 4096);
+        if(srcFile.gcount()) {
+            destFile.write(buffer, srcFile.gcount());
+        }
+    }
+    srcFile.close();
+    destFile.close();
+}
+
+line::cli::common::FileInfoFromCommitLine
+line::cli::common::funcs::parseFileInfoFromCommitLine(const line::core::String::StringSlice& commitLine) noexcept {
+    line::core::String::StringSlice relativeFilePath{
+        commitLine.beginning,
+        commitLine.count - (line::core::Hasher::Hash::hexHashCodeLength + 1)
+    };
+    line::core::String::StringSlice hexHashCode{
+        commitLine.beginning + (relativeFilePath.count + 1),
+        line::core::Hasher::Hash::hexHashCodeLength
+    };
+    return {relativeFilePath, hexHashCode};
 }

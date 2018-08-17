@@ -68,28 +68,11 @@ static line::core::DirectoryStructure<line::core::Hasher::Hash> readDirectoryStr
 
 static void storeFileData(const line::core::DirectoryStructure<line::core::Hasher::Hash>::ConstFileIterator::ConstData& fileData) {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    {
-        std::ifstream fileObject{navigator.navigateToObject(fileData.second)};
-        if(fileObject.good()) {
-            return;
-        }
-        fileObject.close();
+    if(!line::cli::common::funcs::fileExists(
+        navigator.navigateToObject(line::core::Hasher::Hash::toHexHashCode(fileData.second))
+    )) {
+        line::cli::common::funcs::copyFile(navigator.path(), fileData.first.beginning);
     }
-    std::ofstream fileObject;
-    std::ifstream file;
-    static char buffer[4096];
-    fileObject.exceptions(std::ofstream::badbit);
-    fileObject.open(navigator.path());
-    file.exceptions(std::ifstream::badbit);
-    file.open(fileData.first.beginning);
-    while(file) {
-        file.read(buffer, 4096);
-        if(file.gcount()) {
-            fileObject.write(buffer, file.gcount());
-        }
-    }
-    file.close();
-    fileObject.close();
 }
 
 static void writeCommitInfo(std::ofstream& file, const Commit& commit) {

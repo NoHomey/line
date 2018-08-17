@@ -47,6 +47,18 @@ line::core::String::StringSlice line::core::Hasher::Hash::toHexHashCode(const Ha
     return {hexHashCode, hexHashCodeLength};
 }
 
+bool line::core::Hasher::Hash::isValidHexHashCode(const line::core::String::StringSlice& hexHashCode) noexcept {
+    if(hexHashCode.count != hexHashCodeLength) {
+        return false;
+    }
+    for(unsigned int i = 0; i < hexHashCodeLength; i++) {
+        if(!isHexSymbol(hexHashCode.beginning[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 line::core::Hasher::Hash line::core::Hasher::Hash::fromHexHashCode(const line::core::String::StringSlice& hexHashCode) noexcept {
     assert(hexHashCode.count == hexHashCodeLength);
     for(unsigned int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
@@ -87,7 +99,11 @@ bool line::core::Hasher::Hash::isDigit(char c) noexcept {
     return (c >= '0') && (c <= '9');
 }
 
+bool line::core::Hasher::Hash::isHexSymbol(char c) noexcept {
+    return isDigit(c) || ((c >= 'a') && (c <=  'f'));
+}
+
 unsigned char line::core::Hasher::Hash::hexDigitToBits(char hexDigit) noexcept {
-    assert(isDigit(hexDigit) || ((hexDigit >= 'a') && (hexDigit <=  'f')));
+    assert(isHexSymbol(hexDigit));
     return isDigit(hexDigit) ? (hexDigit - '0') : ((hexDigit - 'a') + 10);
 }

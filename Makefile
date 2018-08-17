@@ -36,13 +36,13 @@ $(eval $(call Object,$(core),PathBuilder,String))
 
 $(eval $(call Object,$(core),FilePathIterator,String))
 
-$(eval $(call Object,$(core),FileRecursiveIterator,String))
+$(eval $(call Object,$(core),FileRecursiveIterator,PathBuilder Hasher))
 
 $(eval $(call Object,$(core),Hasher,String))
 
 $(eval $(call Object,$(core),PatternMatcher,String))
 
-$(eval $(call Object,$(cliCommon),Navigator,Hasher))
+$(eval $(call Object,$(cliCommon),Navigator,String))
 
 $(eval $(call Object,$(cliCommon),PathCutter,String))
 

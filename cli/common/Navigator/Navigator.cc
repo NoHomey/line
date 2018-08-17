@@ -61,11 +61,11 @@ const char* line::cli::common::Navigator::navigateToObjects() noexcept {
     return currentPath;
 }
 
-const char* line::cli::common::Navigator::navigateToObject(const line::core::Hasher::Hash& hash) noexcept {
+const char* line::cli::common::Navigator::navigateToObject(const line::core::String::StringSlice& hexHashString) noexcept {
     assert(isInitialized());
+    assert(line::core::Hasher::Hash::isValidHexHashCode(hexHashString));
     std::memcpy(currentPath + directoryPathLength, "/.line/objects/", 15);
-    line::core::String::StringSlice hexHashCode = line::core::Hasher::Hash::toHexHashCode(hash);
-    std::memcpy(currentPath + directoryPathLength + 15, hexHashCode.beginning, hexHashCode.count);
+    std::memcpy(currentPath + directoryPathLength + 15, hexHashString.beginning, hexHashString.count);
     currentPath[maximumAdditionalChars - 1] = '\0';
     return currentPath;
 }

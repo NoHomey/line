@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include "../../../core/String/String.h"
 #include "../../../core/Hasher/Hasher.h"
 
 namespace line {
@@ -33,7 +34,7 @@ public:
 
     const char* navigateToObjects() noexcept;
 
-    const char* navigateToObject(const line::core::Hasher::Hash& hash) noexcept;
+    const char* navigateToObject(const line::core::String::StringSlice& hexHashString) noexcept;
 
 private:
     Navigator() noexcept;
