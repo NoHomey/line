@@ -7,6 +7,7 @@
 #include "../utils/types/Optional.thd"
 #include "./String/String.h"
 #include "./FilePathIterator/FilePathIterator.h"
+#include "./PathBuilder/PathBuilder.h"
 #include <utility>
 
 namespace line {
@@ -190,17 +191,7 @@ private:
     static typename Directory::Children::Iterator iterator(Directory* dirPtr);
 
 private:
-    void addName(const Name& name);
-
-    void addFileName(const Name& name);
-
-    void addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator);
-
-    void removeName(const Name& name);
-
-    void removeFileName(const Name& name);
-
-    void removeLastDirectory();
+    void addToFilePath(const Name& name);
 
     void moveDown(DirectoryPtr dirPtr);
 
@@ -212,7 +203,7 @@ private:
 
 private:
     line::dataStructures::Stack<IterationState> directoryPath;
-    line::dataStructures::Stack<char> filePath;
+    line::core::PathBuilder filePath;
     FileIterator fileIterator;
 };
 
@@ -442,10 +433,10 @@ filePath{!directoryStructure.isEmpty()
     ? (directoryStructure.maxFilePathLength + directoryStructure.directoryPathLength + 2) : 0},
 fileIterator{} {
     if(!directoryStructure.isEmpty()) {
-        for(std::size_t i = 0; i < directoryStructure.directoryPathLength; ++i) {
-            filePath.push(directoryStructure.directoryPath[i]);
-        }
-        filePath.push('/');
+        filePath.addToPath(line::core::String::StringSlice{
+            directoryStructure.directoryPath,
+            directoryStructure.directoryPathLength
+        });
         moveDown(&directoryStructure.rootDir);
     }
 }
@@ -461,7 +452,7 @@ template<bool Const>
 typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::ConstData
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() const noexcept {
     assert(*this);
-    return {line::core::String::StringSlice{filePath.data(), filePath.size()}, (*fileIterator).fileInfo};
+    return {filePath.path(), (*fileIterator).fileInfo};
 }
 
 template<typename FileInfo>
@@ -469,17 +460,17 @@ template<bool Const>
 typename line::core::DirectoryStructure<FileInfo>::template InternalFileIterator<Const>::Data
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator*() noexcept {
     assert(*this);
-    return {line::core::String::StringSlice{filePath.data(), filePath.size() - 1}, (*fileIterator).fileInfo};
+    return {filePath.path(), (*fileIterator).fileInfo};
 }
 
 template<typename FileInfo>
 template<bool Const>
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>&
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::operator++() {
-    removeFileName((*fileIterator).name);
+    filePath.removeLast();
     ++fileIterator;
     if(fileIterator) {
-        addFileName((*fileIterator).name);
+        addToFilePath((*fileIterator).name);
     }
     else {
         changeDirectory();
@@ -522,57 +513,8 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::iterator(
 template<typename FileInfo>
 template<bool Const>
 void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addName(const Name& name) {
-    std::size_t nameLength = name.length();
-    const char* nameData = name.cString();
-    for(std::size_t i = 0; i < nameLength; ++i) {
-        filePath.push(nameData[i]);
-    }
-}
-
-template<typename FileInfo>
-template<bool Const>
-void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addFileName(const Name& name) {
-    addName(name);
-    filePath.push('\0');
-}
-
-template<typename FileInfo>
-template<bool Const>
-void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addDirectoryName(const DirectoryChildrenIterator& directoryChildrenIterator) {
-    addName((*directoryChildrenIterator).name);
-    filePath.push('/');
-}
-
-template<typename FileInfo>
-template<bool Const>
-void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeName(const Name& name) {
-    std::size_t pops = name.length();
-    for(std::size_t i = 0; i < pops; ++i) {
-        filePath.pop();
-    }
-}
-
-template<typename FileInfo>
-template<bool Const>
-void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeFileName(const Name& name) {
-    filePath.pop();
-    removeName(name);
-}
-
-template<typename FileInfo>
-template<bool Const>
-void
-line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::removeLastDirectory() {
-    if(!filePath.isEmpty()) {
-        filePath.pop();
-        removeName(directoryPath.top().first->name);
-    }
-    directoryPath.pop();
+line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::addToFilePath(const Name& name) {
+    filePath.addToPath(line::core::String::toStringSlice(name));
 }
 
 template<typename FileInfo>
@@ -583,12 +525,12 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveDown(
     while(dirPtr->files.isEmpty()) {
         ++(directoryPath.top().second);
         DirectoryChildrenIterator iter = iterator(dirPtr);
-        addDirectoryName(iter);
+        addToFilePath((*iter).name);
         dirPtr = &(*iter);
         directoryPath.push({dirPtr, 0});
     }
     fileIterator = iterator(dirPtr->files);
-    addFileName((*fileIterator).name);
+    addToFilePath((*fileIterator).name);
 }
 
 template<typename FileInfo>
@@ -602,7 +544,7 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::moveToNex
     }
     if(iter) {
         ++increments;
-        addDirectoryName(iter);
+        addToFilePath((*iter).name);
         moveDown(&(*iter));
         return true;
     }
@@ -617,7 +559,10 @@ line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::changeDir
         if(moveToNextDirectory()) {
             break;
         }
-        removeLastDirectory();
+        if(!filePath.isEmpty()) {
+            filePath.removeLast();
+        }
+        directoryPath.pop();
     }
 }
 

@@ -10,7 +10,7 @@ const char* const line::core::FileRecursiveIterator::lineInfoDirectoryName = ".l
 
 line::core::FileRecursiveIterator::FileRecursiveIterator(const char* directory)
 : filePath{initialFilePathCapacity}, directoriesPath{initialDirectoriesPathCapacity} {
-    addToFilePath(directory);
+    filePath.addToPath(directory);
     int error = readCurrentDirectory(ignoreSpecialEntriesAndLineInfoDirectory);
     if(error) {
         // handle
@@ -26,7 +26,7 @@ line::core::FileRecursiveIterator::operator bool() const noexcept {
 
 line::core::String::StringSlice line::core::FileRecursiveIterator::operator*() const noexcept {
     assert(*this);
-    return {filePath.data(), filePath.size() - 1};
+    return filePath.path();
 }
 
 line::core::FileRecursiveIterator& line::core::FileRecursiveIterator::operator++() {
@@ -62,16 +62,9 @@ bool line::core::FileRecursiveIterator::ignoreSpecialEntriesAndLineInfoDirectory
     return false;
 }
 
-void line::core::FileRecursiveIterator::addToFilePath(const char* directory) {
-    for(std::size_t i = 0; directory[i]; ++i) {
-        filePath.push(directory[i]);
-    }
-    filePath.push('\0');
-}
-
 int line::core::FileRecursiveIterator::readCurrentDirectory(bool (*ignoreEntry) (const char*)) {
     errno = 0;
-    DIR* directoryEntryStream = opendir(filePath.data());
+    DIR* directoryEntryStream = opendir(filePath.path().beginning);
     if(directoryEntryStream) {
         directoriesPath.push({});
         Entries& entries = directoriesPath.top();
@@ -87,7 +80,7 @@ int line::core::FileRecursiveIterator::readCurrentDirectory(bool (*ignoreEntry) 
         closedir(directoryEntryStream);
         if(entries.isEmpty()) {
             directoriesPath.pop();
-            removeFromFilePath();
+            filePath.removeLast();
         }
     }
     return errno;
@@ -100,9 +93,7 @@ void line::core::FileRecursiveIterator::walkUntilFileIsReached() {
     }
     while(!directoriesPath.isEmpty()) {
         Entries& entries = directoriesPath.top();
-        filePath.pop();
-        filePath.push('/');
-        addToFilePath(entries.first().cString());
+        filePath.addToPath(entries.first().cString());
         entries.first().clean();
         entries.popFirst();
         int error = readCurrentDirectory(isSpecialEntry);
@@ -117,26 +108,18 @@ void line::core::FileRecursiveIterator::walkUntilFileIsReached() {
     }
 }
 
-void line::core::FileRecursiveIterator::removeFromFilePath() noexcept {
-    while(filePath.top() != '/') {
-        filePath.pop();
-    }
-    filePath.pop();
-    filePath.push('\0');
-}
-
 void line::core::FileRecursiveIterator::clean() noexcept {
     filePath.clean();
     directoriesPath.clean();
 }
 
 void line::core::FileRecursiveIterator::removeFromPaths() noexcept {
-    removeFromFilePath();
+    filePath.removeLast();
     while(!directoriesPath.isEmpty()) {
         if(directoriesPath.top().isEmpty()) {
             directoriesPath.pop();
             if(!directoriesPath.isEmpty()) {
-                removeFromFilePath();
+                filePath.removeLast();
             }
         } else {
             break;

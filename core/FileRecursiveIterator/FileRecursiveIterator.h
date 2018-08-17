@@ -2,7 +2,7 @@
 
 #include "../../dataStructures/Stack.thd"
 #include "../../dataStructures/SinglyLinkedList.thd"
-#include "../String/String.h"
+#include "../PathBuilder/PathBuilder.h"
 
 namespace line {
 
@@ -38,13 +38,9 @@ private:
     static bool ignoreSpecialEntriesAndLineInfoDirectory(const char* entryName) noexcept;
 
 private:
-    void addToFilePath(const char* directory);
-
     int readCurrentDirectory(bool (*ignoreEntry) (const char*));
 
     void walkUntilFileIsReached();
-
-    void removeFromFilePath() noexcept;
 
     void removeFromPaths() noexcept;
 
@@ -94,7 +90,7 @@ private:
     using Entries = line::dataStructures::SinglyLinkedList<ConstCharWrapper>;
 
 private:
-    line::dataStructures::Stack<char> filePath;
+    line::core::PathBuilder filePath;
 
     line::dataStructures::Stack<Entries> directoriesPath;
 };
