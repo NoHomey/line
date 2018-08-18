@@ -33,24 +33,6 @@ struct Commit {
     Commit& operator=(Commit&& other) noexcept = default;
 };
 
-struct CommitCommandArguments {
-    Commit commit;
-    line::cli::common::FilePathMatcher filePathMatcher;
-
-    CommitCommandArguments(Commit&& commit, line::cli::common::FilePathMatcher&& filePathMatcher) noexcept
-    : commit{std::move(commit)}, filePathMatcher{std::move(filePathMatcher)} { }
-
-    CommitCommandArguments(const CommitCommandArguments& other) noexcept = default;
-
-    CommitCommandArguments(CommitCommandArguments&& other) noexcept = default;
-
-    ~CommitCommandArguments() noexcept = default;
-
-    CommitCommandArguments& operator=(const CommitCommandArguments& other) noexcept = default;
-
-    CommitCommandArguments& operator=(CommitCommandArguments&& other) noexcept = default;
-};
-
 static line::core::DirectoryStructure<line::core::Hasher::Hash> readDirectoryStructure(const line::cli::common::FilePathMatcher& filePathMatcher) {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
     line::core::DirectoryStructure<line::core::Hasher::Hash> directoryStructure{navigator.navigateToDirectory()};
@@ -99,14 +81,26 @@ static void updateCommitsCounter(std::size_t newCounter) {
     commitsCounter.close();
 }
 
-static void createNewCommit(const CommitCommandArguments& commitCommandArguments) {
-    const Commit& commit = commitCommandArguments.commit;
+static void reportEmptyLineRepository() {
+    std::cout << "Empty line repository. Nothing to commit" << std::endl;
+}
+
+static void createNewCommit(const Commit& commit, const line::cli::common::FilePathMatcher& filePathMatcher) {
     std::size_t commitsCounter = line::cli::common::funcs::readCommitsCounter();
-    line::core::DirectoryStructure<line::core::Hasher::Hash> directoryStructure = readDirectoryStructure(commitCommandArguments.filePathMatcher);
+    if(!commitsCounter) {
+        reportEmptyLineRepository();
+        return;
+    }
+    line::core::DirectoryStructure<line::core::Hasher::Hash> directoryStructure = readDirectoryStructure(filePathMatcher);
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
     std::ofstream commitFile;
     if(directoryStructure.isEmpty()) {
-        std::cout << "Empty line repository. Nothing to commit" << std::endl;
+        if(filePathMatcher.hasPattern()) {
+            std::cout << "Nothing to commit. No file matches pattern "
+                << filePathMatcher.pattern() << std::endl;
+        } else {
+            reportEmptyLineRepository();
+        }
         return;
     }
     commitFile.exceptions(std::ofstream::badbit);
@@ -144,15 +138,19 @@ void line::cli::commit(int argc, char** argv) {
     line::cli::common::Navigator::init(directoryPath);
     line::cli::common::PathCutter::init(directoryPath);
     if(line::cli::common::funcs::isRepository()) {
-        createNewCommit(argc == 3
-            ? CommitCommandArguments{
-                Commit{argv[1], argv[2]},
-                line::cli::common::FilePathMatcher{}
+        const char* commitAuthor = argv[1];
+        const char* commitDescription = argv[2];
+        const char* filePattern = nullptr;
+        if(argc == 4) {
+            commitAuthor = argv[2];
+            commitDescription = argv[3];
+            if(argv[1][0]) {
+                filePattern = argv[1];
             }
-            : CommitCommandArguments{
-                Commit{argv[2], argv[3]},
-                line::cli::common::FilePathMatcher{line::core::String::StringSlice{argv[1], std::strlen(argv[1])}}
-            }
-        );
+        }
+        line::cli::common::FilePathMatcher filePathMatcher = filePattern
+            ? line::cli::common::FilePathMatcher{line::core::String::StringSlice{filePattern, std::strlen(filePattern)}}
+            : line::cli::common::FilePathMatcher{};
+        createNewCommit(Commit{commitAuthor, commitDescription}, filePathMatcher);
     }
 }

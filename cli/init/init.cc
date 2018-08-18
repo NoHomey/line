@@ -2,7 +2,6 @@
 #include "../common/funcs/funcs.h"
 #include "../common/Navigator/Navigator.h"
 #include <iostream>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fstream>
@@ -13,11 +12,6 @@ struct CreatedResources {
     bool objects = false;
     bool commitsCounter = false;
 };
-
-static int mkdirWithPermisions(const char* directory) {
-    errno = 0;
-    return mkdir(directory, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-}
 
 static void warnFailedToInitializeRepostiory(const char* directory) {
     std::cout << "Failed to initialize line repository in " << directory << std::endl;
@@ -48,7 +42,7 @@ static void initRepository(const char* directory) {
     CreatedResources createdResources;
     line::cli::common::Navigator::init(directory);
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    if(mkdirWithPermisions(navigator.navigateToRepoInfoDir())) {
+    if(line::cli::common::funcs::mkdirWithPermisions(navigator.navigateToRepoInfoDir())) {
         if(errno == EEXIST) {
             std::cout << directory << " is a line repository." << std::endl;
         } else {
@@ -57,12 +51,12 @@ static void initRepository(const char* directory) {
         return;
     }
     createdResources.repoInfoDir = true;
-    if(mkdirWithPermisions(navigator.navigateToObjects())) {
+    if(line::cli::common::funcs::mkdirWithPermisions(navigator.navigateToObjects())) {
         cleanCreatedResourcesAndWarnFailInitialize(createdResources);
         return;
     }
     createdResources.objects = true;
-    if(mkdirWithPermisions(navigator.navigateToCommits())) {
+    if(line::cli::common::funcs::mkdirWithPermisions(navigator.navigateToCommits())) {
         cleanCreatedResourcesAndWarnFailInitialize(createdResources);
         return;
     }

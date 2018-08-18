@@ -25,6 +25,10 @@ public:
     FilePathMatcher& operator=(FilePathMatcher&& other) noexcept = default;
 
 public:
+    bool hasPattern() const noexcept;
+
+    line::core::String::StringSlice pattern() const noexcept;
+
     bool match(const line::core::String::StringSlice& filePath) const noexcept;
 
 private:

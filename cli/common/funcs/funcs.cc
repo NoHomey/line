@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <cstdlib>
+#include <cstring>
 #include "../Navigator/Navigator.h"
 
 line::cli::common::DirectoryCheckResult line::cli::common::funcs::checkIsDirectory(const char* directoryPath) {
@@ -20,6 +22,11 @@ line::cli::common::DirectoryCheckResult line::cli::common::funcs::checkIsDirecto
         return DirectoryCheckResult::NotADirectory;
     }
     return DirectoryCheckResult::Directory;
+}
+
+int line::cli::common::funcs::mkdirWithPermisions(const char* directory) {
+    errno = 0;
+    return mkdir(directory, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 bool line::cli::common::funcs::isDirectory(const char* directoryPath) {
@@ -111,4 +118,19 @@ line::cli::common::funcs::parseFileInfoFromCommitLine(const line::core::String::
         line::core::Hasher::Hash::hexHashCodeLength
     };
     return {relativeFilePath, hexHashCode};
+}
+
+bool line::cli::common::funcs::parseCommitId(std::size_t& commitId, const char* str, std::size_t headId) {
+    assert(str);
+    assert(str[0]);
+    if(!std::strcmp(str, "HEAD")) {
+        commitId = headId;
+        return true;
+    }
+    char* end;
+    commitId = std::strtoul(str, &end, 10);
+    if(end == (str + std::strlen(str))) {
+        return true;
+    }
+    return false;
 }

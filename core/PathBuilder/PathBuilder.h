@@ -35,6 +35,8 @@ public:
 
     void removeLast() noexcept;
 
+    void empty() noexcept;
+
     void clean() noexcept;
 
 private:

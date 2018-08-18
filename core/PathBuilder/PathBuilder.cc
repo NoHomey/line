@@ -69,6 +69,10 @@ void line::core::PathBuilder::removeLast() noexcept {
     buffer[bufferSize - 1] = '\0';
 }
 
+void line::core::PathBuilder::empty() noexcept {
+    bufferSize = 0;
+}
+
 void line::core::PathBuilder::clean() noexcept {
     delete[] buffer;
     null();

@@ -6,6 +6,7 @@
 #include "./cli/log/log.h"
 #include "./cli/status/status.h"
 #include "./cli/commit/commit.h"
+#include "./cli/revert/revert.h"
 
 struct Command {
     const char* name;
@@ -23,12 +24,13 @@ static void seeHelp() {
 }
 
 int main(int argc, char** argv) {
-    const unsigned int commandsCount = 4;
+    const unsigned int commandsCount = 5;
     Command commands[commandsCount] = {
         {"init", line::cli::init},
         {"log", line::cli::log},
         {"status", line::cli::status},
-        {"commit", line::cli::commit}
+        {"commit", line::cli::commit},
+        {"revert", line::cli::revert}
     };
     void (*command)(int, char**) = nullptr;
     if(argc == 1) {

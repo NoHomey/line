@@ -8,9 +8,18 @@ line::cli::common::FilePathMatcher::FilePathMatcher() noexcept
 line::cli::common::FilePathMatcher::FilePathMatcher(const line::core::String::StringSlice& pattern) noexcept
 : patternString{pattern.beginning}, patternLength{pattern.count} { }
 
+bool line::cli::common::FilePathMatcher::hasPattern() const noexcept {
+    return patternLength;
+}
+
+line::core::String::StringSlice line::cli::common::FilePathMatcher::pattern() const noexcept {
+    assert(hasPattern());
+    return {patternString, patternLength};
+}
+
 bool line::cli::common::FilePathMatcher::match(const line::core::String::StringSlice& filePath) const noexcept {
-    if(patternString) {
-        SegmentIterator patternSegmentIterator{line::core::String::StringSlice{patternString, patternLength}};
+    if(hasPattern()) {
+        SegmentIterator patternSegmentIterator{pattern()};
         SegmentIterator filePathSegmentIterator{filePath};
         while(patternSegmentIterator) {
             if(!filePathSegmentIterator) {

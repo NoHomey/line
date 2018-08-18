@@ -18,6 +18,8 @@ namespace funcs {
 
 DirectoryCheckResult checkIsDirectory(const char* directoryPath);
 
+int mkdirWithPermisions(const char* directory);
+
 bool isDirectory(const char* directoryPath);
 
 bool isRepository();
@@ -29,6 +31,8 @@ bool fileExists(const char* filePath);
 void copyFile(const char* destFilePath, const char* srcFilePath);
 
 FileInfoFromCommitLine parseFileInfoFromCommitLine(const line::core::String::StringSlice& commitLine) noexcept;
+
+bool parseCommitId(std::size_t& commitId, const char* str, std::size_t headId);
 
 }
 
