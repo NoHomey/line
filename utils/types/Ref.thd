@@ -1,0 +1,18 @@
+#pragma once
+
+#include "./ComparsionResult.h"
+
+namespace line {
+
+namespace utils {
+
+namespace types {
+
+template<typename T>
+using Ref = T&;
+
+}
+
+}
+
+}

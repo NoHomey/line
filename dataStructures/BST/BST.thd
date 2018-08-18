@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include "../../utils/types/Compare.thd"
+#include "../../utils/types/Ref.thd"
 
 namespace line {
 
@@ -56,13 +57,19 @@ Node* insert(Node* root, T&& data);
 template<typename Node, typename T, typename Key, line::utils::types::KeyCompare<T, Key> compare>
 Node* find(Node* root, const Key& key) noexcept;
 
+template<typename Node, typename T, typename Key, Node* (*routine) (Node*), line::utils::types::KeyCompare<T, Key> compare>
+Node* remove(Node* root, const Key& key) noexcept;
+
 template<typename Node>
 void destroy(Node* root) noexcept;
 
 namespace internal {
 
 template<typename Node, typename T, typename Data, Node* (*routine) (Node*, const T&), line::utils::types::Compare<T> compare>
-Node* insert(Node* root, Data data);
+Node* insert(Node* root, Data data, line::utils::types::Ref<const Node*> inserted);
+
+template<typename Node>
+Node* extractMinNode(Node* parent, Node* current) noexcept;
 
 }
 
@@ -127,33 +134,38 @@ line::dataStructures::BST::height(const Node* root) noexcept {
 
 template<typename Node, typename T, typename Data, Node* (*routine) (Node*, const T&), line::utils::types::Compare<T> compare>
 Node*
-line::dataStructures::BST::internal::insert(Node* root, Data data) {
+line::dataStructures::BST::internal::insert(Node* root, Data data, line::utils::types::Ref<const Node*> inserted) {
     using line::utils::types::ComparsionResult;
     if(isEmpty(root)) {
-        return new Node(std::forward<Data>(data));
+        Node* node = new Node(std::forward<Data>(data));
+        inserted = node;
+        return node;
     }
     switch(compare(root->data, data)) {
         case ComparsionResult::Equal: return root;
         case ComparsionResult::Less:
-            root->rightNode() = internal::insert<Node, T, Data, routine, compare>(root->rightNode(), std::forward<Data>(data));
-            return routine(root, root->rightNode()->data);
+            root->rightNode() = internal::insert<Node, T, Data, routine, compare>(root->rightNode(), std::forward<Data>(data), inserted);
+            break;
         case ComparsionResult::Greater:
-            root->leftNode() = internal::insert<Node, T, Data, routine, compare>(root->leftNode(), std::forward<Data>(data));
-            return routine(root, root->leftNode()->data);
+            root->leftNode() = internal::insert<Node, T, Data, routine, compare>(root->leftNode(), std::forward<Data>(data), inserted);
+            break;
         default: assert(false);
     }
+    return routine(root, inserted->data);
 }
 
 template<typename Node, typename T, Node* (*routine) (Node*, const T&), line::utils::types::Compare<T> compare>
 Node*
 line::dataStructures::BST::insert(Node* root, const T& data) {
-    return internal::insert<Node, T, const T&, routine, compare>(root, data);
+    const Node* inserted = nullptr;
+    return internal::insert<Node, T, const T&, routine, compare>(root, data, inserted);
 }
 
 template<typename Node, typename T, Node* (*routine) (Node*, const T&), line::utils::types::Compare<T> compare>
 Node*
 line::dataStructures::BST::insert(Node* root, T&& data) {
-    return internal::insert<Node, T, T&&, routine, compare>(root, std::move(data));
+    const Node* inserted = nullptr;
+    return internal::insert<Node, T, T&&, routine, compare>(root, std::move(data), inserted);
 }
 
 template<typename Node, typename T, typename Key, line::utils::types::KeyCompare<T, Key> compare>
@@ -168,6 +180,58 @@ line::dataStructures::BST::find(Node* root, const Key& key) noexcept {
         return root;
     }
     return find<Node, T, Key, compare>(comparsionResult == ComparsionResult::Less ? root->rightNode() : root->leftNode(), key);
+}
+
+template<typename Node>
+Node* line::dataStructures::BST::internal::extractMinNode(Node* parent, Node* current) noexcept {
+    return !isEmpty(current->leftNode())
+        ? extractMinNode(current, current->leftNode())
+        : (parent->leftNode() = current->rightNode(), current);
+}
+
+template<typename Node, typename T, typename Key, Node* (*routine) (Node*), line::utils::types::KeyCompare<T, Key> compare>
+Node*
+line::dataStructures::BST::remove(Node* root, const Key& key) noexcept {
+    if(isEmpty(root)) {
+        return nullptr;
+    }
+    using line::utils::types::ComparsionResult;
+    const bool isLeftEmpty = isEmpty(root->leftNode());
+    const bool isRightEmpty = isEmpty(root->rightNode());
+    switch(compare(root->data, key)) {
+        case ComparsionResult::Less:
+            root->rightNode() = remove<Node, T, Key, routine, compare>(root->rightNode(), key);
+            break;
+        case ComparsionResult::Greater:
+            root->leftNode() = remove<Node, T, Key, routine, compare>(root->leftNode(), key);
+            break;
+        case ComparsionResult::Equal:
+            if(isLeftEmpty && isRightEmpty) {
+                delete root;
+                return nullptr;
+            }
+            if(isLeftEmpty ^ isRightEmpty) {
+                Node* temp = isLeftEmpty ? root->rightNode() : root->leftNode();
+                delete root;
+                root = temp;
+                break;
+            }
+            if(isEmpty(root->rightNode()->leftNode())) {
+                Node* temp = root->rightNode();
+                temp->leftNode() = root->leftNode();
+                delete root;
+                root = temp;
+            } else {
+                Node* inorderSucc = internal::extractMinNode(root->rightNode(), root->rightNode()->leftNode());
+                inorderSucc->rightNode() = root->rightNode();
+                inorderSucc->leftNode() = root->leftNode();
+                delete root;
+                root = inorderSucc;
+            }
+            break;
+        default: assert(false);
+    }
+    return routine(root);
 }
 
 template<typename Node>

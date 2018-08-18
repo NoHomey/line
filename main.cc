@@ -1,6 +1,31 @@
 
 #include <iostream>
-#include <cassert>
+#include "./dataStructures/BST/AVLTree.thd"
+#include "./utils/funcs/integerToComparsionResult.thd"
+
+line::utils::types::ComparsionResult compare(const int& a, const int& b) {
+    return line::utils::funcs::integerToComparsionResult(a - b);
+}
+
+int main() {
+    line::dataStructures::BST::AVLTree<int, int, compare, compare> tree;
+
+    tree.insert(9);
+    tree.insert(5);
+    tree.insert(10);
+    tree.insert(0);
+    tree.insert(6);
+    tree.insert(11);
+    tree.insert(-1);
+    tree.insert(1);
+    tree.insert(2);
+
+    tree.remove(10);
+
+    return 0;
+}
+
+/*#include <cassert>
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
@@ -53,4 +78,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}
+}*/

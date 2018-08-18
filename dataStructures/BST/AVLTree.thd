@@ -40,6 +40,8 @@ public:
 
     void insert(T&& data);
 
+    void remove(const Key& key) noexcept;
+
     void destroy() noexcept;
 
 private:
@@ -62,6 +64,8 @@ public:
 private:
     static std::size_t height(const Node* node) noexcept;
 
+    static long long getBalance(const Node* node) noexcept;
+
     static Node* rotateLeft(Node* root) noexcept;
 
     static Node* rotateRight(Node* root) noexcept;
@@ -72,6 +76,8 @@ private:
 
 private:
     static Node* rotate(Node* root, const T& data);
+
+    static Node* rotate(Node* root) noexcept;
 
     template<typename Data>
     void insert(Data data);
@@ -231,7 +237,13 @@ line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::iterator() {
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 std::size_t
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::height(const Node* node) noexcept {
-    return node ? node->height() : 0;
+    return !BST::isEmpty(node) ? node->height() : 0;
+}
+
+template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+long long
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::getBalance(const Node* node) noexcept {
+    return BST::isEmpty(node) ? 0 : static_cast<long long>(height(node->leftNode())) - static_cast<long long>(height(node->rightNode()));
 }
 
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
@@ -280,7 +292,7 @@ line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::extractRef(void
     return reinterpret_cast<Node*>(ptr)->data;
 }
 
-template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+template<typename T, typename Key, line::utils::types::Compare<T>    compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 typename line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::Node*
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::rotate(Node* root, const T& data) {
     using line::utils::types::ComparsionResult;
@@ -308,6 +320,26 @@ line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::rotate(Node* ro
     return root;
 }
 
+template<typename T, typename Key, line::utils::types::Compare<T>    compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+typename line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::Node*
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::rotate(Node* root) noexcept {
+    root->updateHeight();
+    const long long balance = getBalance(root);
+    if(balance > 1) {
+        if(getBalance(root->leftNode()) < 0) {
+            root->leftNode() = rotateLeft(root->leftNode());
+        }
+        return rotateRight(root);
+    }
+    if(balance < -1) {
+        if(getBalance(root->rightNode()) > 0) {
+            root->rightNode() = rotateRight(root->rightNode());
+        }
+        return rotateLeft(root);
+    }
+    return root;
+}
+
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
 template<typename Data>
 void
@@ -325,6 +357,12 @@ template<typename T, typename Key, line::utils::types::Compare<T> compare, line:
 void
 line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::insert(T&& data) {
     insert<T&&>(std::move(data));
+}
+
+template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
+void
+line::dataStructures::BST::AVLTree<T, Key, compare, keyCompare>::remove(const Key& key) noexcept {
+    root = BST::remove<Node, T, Key, rotate, keyCompare>(root, key);
 }
 
 template<typename T, typename Key, line::utils::types::Compare<T> compare, line::utils::types::KeyCompare<T, Key> keyCompare>
