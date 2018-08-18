@@ -1,26 +1,23 @@
 
 #include <iostream>
-#include "./dataStructures/BST/AVLTree.thd"
-#include "./utils/funcs/integerToComparsionResult.thd"
-
-line::utils::types::ComparsionResult compare(const int& a, const int& b) {
-    return line::utils::funcs::integerToComparsionResult(a - b);
-}
+#include "./core/DirectoryStructure.thd"
 
 int main() {
-    line::dataStructures::BST::AVLTree<int, int, compare, compare> tree;
+    line::core::DirectoryStructure<int> tree{"~/tmp/play-with-git"};
 
-    tree.insert(9);
-    tree.insert(5);
-    tree.insert(10);
-    tree.insert(0);
-    tree.insert(6);
-    tree.insert(11);
-    tree.insert(-1);
-    tree.insert(1);
-    tree.insert(2);
+    tree.insert(
+        line::core::FilePathIterator{line::core::String::StringSlice{"a/b/c/f.txt", 11}},
+        22
+    );
 
-    tree.remove(10);
+    tree.insert(
+        line::core::FilePathIterator{line::core::String::StringSlice{"a/folder/f.txt", 14}},
+        18
+    );
+
+    std::cout << tree.remove(
+        line::core::FilePathIterator{line::core::String::StringSlice{"a/b/c/f.txt", 11}}
+    ) << std::endl;
 
     return 0;
 }

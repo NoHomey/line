@@ -114,7 +114,9 @@ line::dataStructures::DoublyLinkedList::removeAndReturnPrev(Node<T>* node) {
     assert(node);
     assert(!node->next);
     Node<T>* prev = node->prev;
-    prev->next = nullptr;
+    if(prev) {
+        prev->next = nullptr;
+    }
     delete node;
     return prev; 
 }
@@ -125,7 +127,9 @@ line::dataStructures::DoublyLinkedList::removeAndReturnNext(Node<T>* node) {
     assert(node);
     assert(!node->prev);
     Node<T>* next = node->next;
-    next->prev = nullptr;
+    if(next) {
+        next->prev = nullptr;
+    }
     delete node;
     return next;
 }

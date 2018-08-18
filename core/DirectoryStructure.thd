@@ -37,6 +37,8 @@ public:
 public:
     line::utils::types::Optional<FileInfo&> find(FilePathIterator&& filePathIterator);
 
+    std::size_t remove(FilePathIterator&& filePathIterator);
+
     void insert(FilePathIterator&& filePathIterator, FileInfo&& fileInfo);
 
 private:
@@ -75,7 +77,7 @@ private:
     static const FileInfo& getFileInfoConstRef(void* ptr) noexcept;
 
 private:
-    File* findFile(FilePathIterator&& filePathIterator);
+    File* findFile(FilePathIterator& filePathIterator);
 
     void updateFilePathCache(FilePathIterator& filePathIterator);
 
@@ -134,6 +136,8 @@ struct Directory {
     Directory& operator=(const Directory& other) = delete;
 
     Directory& operator=(Directory&& other) noexcept = delete;
+
+    bool isEmpty() const noexcept;
 };
 
 template<bool Const>
@@ -240,14 +244,14 @@ filePathCache{} { }
 template<typename FileInfo>
 bool
 line::core::DirectoryStructure<FileInfo>::isEmpty() const noexcept {
-    return !maxFilePathLength;
+    return rootDir.isEmpty();
 }
 
 template<typename FileInfo>
 line::utils::types::Optional<const FileInfo&>
 line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) const {
     return line::utils::types::Optional<const FileInfo&>{
-        const_cast<DirectoryStructure* const>(this)->findFile(std::move(filePathIterator)),
+        const_cast<DirectoryStructure* const>(this)->findFile(filePathIterator),
         getFileInfoConstRef
     };
 }
@@ -255,7 +259,31 @@ line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterat
 template<typename FileInfo>
 line::utils::types::Optional<FileInfo&> 
 line::core::DirectoryStructure<FileInfo>::find(FilePathIterator&& filePathIterator) {
-    return line::utils::types::Optional<FileInfo&>{findFile(std::move(filePathIterator)), getFileInfoRef};
+    return line::utils::types::Optional<FileInfo&>{findFile(filePathIterator), getFileInfoRef};
+}
+
+template<typename FileInfo>
+std::size_t
+line::core::DirectoryStructure<FileInfo>::remove(FilePathIterator&& filePathIterator) {
+    std::size_t removedDirectoriesCount = 0;
+    File* filePtr = findFile(filePathIterator);
+    if(filePtr) {
+        Directory* dirPtr = filePathCache.data();
+        dirPtr->files.remove(line::core::String::toStringSlice(filePtr->name));
+        while(!filePathCache.isEmpty()) {
+            Directory* dirPtr = filePathCache.data();
+            filePathCache.pop();
+            Directory* parentDir = !filePathCache.isEmpty() ? filePathCache.data() : &rootDir;
+            if(dirPtr->isEmpty()) {
+                parentDir->children.remove(line::core::String::toStringSlice(dirPtr->name));
+                ++removedDirectoriesCount;
+            } else {
+                filePathCache.push(dirPtr);
+                break;
+            }
+        }
+    }
+    return removedDirectoriesCount;
 }
 
 template<typename FileInfo>
@@ -340,7 +368,7 @@ line::core::DirectoryStructure<FileInfo>::getFileInfoConstRef(void* ptr) noexcep
 
 template<typename FileInfo>
 typename line::core::DirectoryStructure<FileInfo>::File*
-line::core::DirectoryStructure<FileInfo>::findFile(FilePathIterator&& filePathIterator) {
+line::core::DirectoryStructure<FileInfo>::findFile(FilePathIterator& filePathIterator) {
     updateFilePathCache(filePathIterator);
     Directory* dir = filePathCache.isEmpty() ? &rootDir : filePathCache.data();
     while(filePathIterator) {
@@ -424,6 +452,12 @@ line::core::DirectoryStructure<FileInfo>::Directory::Directory(const Name& name)
 template<typename FileInfo>
 line::core::DirectoryStructure<FileInfo>::Directory::Directory(Name&& name)
 : name{std::move(name)} { }
+
+template<typename FileInfo>
+bool
+line::core::DirectoryStructure<FileInfo>::Directory::isEmpty() const noexcept {
+    return files.isEmpty() && children.isEmpty();
+}
 
 template<typename FileInfo>
 template<bool Const>
