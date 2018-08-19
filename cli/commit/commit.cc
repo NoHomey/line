@@ -81,16 +81,8 @@ static void updateCommitsCounter(std::size_t newCounter) {
     commitsCounter.close();
 }
 
-static void reportEmptyLineRepository() {
-    std::cout << "Empty line repository. Nothing to commit" << std::endl;
-}
-
 static void createNewCommit(const Commit& commit, const line::cli::common::FilePathMatcher& filePathMatcher) {
     std::size_t commitsCounter = line::cli::common::funcs::readCommitsCounter();
-    if(!commitsCounter) {
-        reportEmptyLineRepository();
-        return;
-    }
     line::core::DirectoryStructure<line::core::Hasher::Hash> directoryStructure = readDirectoryStructure(filePathMatcher);
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
     std::ofstream commitFile;
@@ -99,7 +91,7 @@ static void createNewCommit(const Commit& commit, const line::cli::common::FileP
             std::cout << "Nothing to commit. No file matches pattern "
                 << filePathMatcher.pattern() << std::endl;
         } else {
-            reportEmptyLineRepository();
+            std::cout << "Empty line repository. Nothing to commit" << std::endl;
         }
         return;
     }
@@ -138,19 +130,21 @@ void line::cli::commit(int argc, char** argv) {
     line::cli::common::Navigator::init(directoryPath);
     line::cli::common::PathCutter::init(directoryPath);
     if(line::cli::common::funcs::isRepository()) {
-        const char* commitAuthor = argv[1];
-        const char* commitDescription = argv[2];
-        const char* filePattern = nullptr;
-        if(argc == 4) {
-            commitAuthor = argv[2];
-            commitDescription = argv[3];
-            if(argv[1][0]) {
-                filePattern = argv[1];
+        if(!line::cli::common::funcs::isCheckouted()) {
+            const char* commitAuthor = argv[1];
+            const char* commitDescription = argv[2];
+            const char* filePattern = nullptr;
+            if(argc == 4) {
+                commitAuthor = argv[2];
+                commitDescription = argv[3];
+                if(argv[1][0]) {
+                    filePattern = argv[1];
+                }
             }
+            line::cli::common::FilePathMatcher filePathMatcher = filePattern
+                ? line::cli::common::FilePathMatcher{line::core::String::StringSlice{filePattern, std::strlen(filePattern)}}
+                : line::cli::common::FilePathMatcher{};
+            createNewCommit(Commit{commitAuthor, commitDescription}, filePathMatcher);
         }
-        line::cli::common::FilePathMatcher filePathMatcher = filePattern
-            ? line::cli::common::FilePathMatcher{line::core::String::StringSlice{filePattern, std::strlen(filePattern)}}
-            : line::cli::common::FilePathMatcher{};
-        createNewCommit(Commit{commitAuthor, commitDescription}, filePathMatcher);
     }
 }

@@ -5,41 +5,10 @@
 #include <utility>
 #include "../../core/Hasher/Hasher.h"
 #include "../../core/PathBuilder/PathBuilder.h"
-#include "../../core/FilePathIterator/FilePathIterator.h"
 #include "../common/Navigator/Navigator.h"
 #include "../common/FilePathMatcher/FilePathMatcher.h"
 #include "../common/FileLineReader/FileLineReader.h"
 #include "../common/funcs/funcs.h"
-
-static bool ensurePathExists(line::core::PathBuilder& pathBuilder, const line::core::String::StringSlice& filePath) {
-    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
-    line::core::FilePathIterator filePathIterator{filePath};
-    pathBuilder.empty();
-    pathBuilder.addToPath(navigator.navigateToDirectory());
-    while(filePathIterator) {
-        pathBuilder.addToPath(*filePathIterator);
-        line::cli::common::DirectoryCheckResult directoryCheckResult
-            = line::cli::common::funcs::checkIsDirectory(pathBuilder.path().beginning);
-        if(directoryCheckResult == line::cli::common::DirectoryCheckResult::NotADirectory) {
-            return false;
-        }
-        if(directoryCheckResult == line::cli::common::DirectoryCheckResult::NotExist) {
-            break;
-        }
-        ++filePathIterator;
-    }
-    while(filePathIterator) {
-        if(line::cli::common::funcs::mkdirWithPermisions(pathBuilder.path().beginning)) {
-            return false;
-        }
-        ++filePathIterator;
-        if(filePathIterator) {
-            pathBuilder.addToPath(*filePathIterator);
-        }
-    }
-    pathBuilder.addToPath(filePathIterator.getFileName());
-    return true;
-}
 
 static void revertFile(line::core::PathBuilder& pathBuilder, const line::cli::common::FileInfoFromCommitLine& fileInfo) {
     line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
@@ -47,7 +16,7 @@ static void revertFile(line::core::PathBuilder& pathBuilder, const line::cli::co
     pathBuilder.addToPath(navigator.navigateToDirectory());
     pathBuilder.addToPath(fileInfo.first);
     if(!line::cli::common::funcs::fileExists(pathBuilder.path().beginning)) {
-        if(!ensurePathExists(pathBuilder, fileInfo.first)) {
+        if(!line::cli::common::funcs::ensurePathExists(pathBuilder, fileInfo.first)) {
             std::cout << "failed to revert file " << fileInfo.first << std::endl;
             return;
         }
@@ -101,12 +70,14 @@ static void revertFilesFromCommit(const char* commitIdStr, const char* filePatte
 }
 
 void line::cli::revert(int argc, char** argv) {
-    if(argc < 2) {
+    if(argc < 3) {
         std::cout << "'line revert' expects 3 arguments" << std::endl;
         return;
     }
     line::cli::common::Navigator::init(argv[0]);
     if(line::cli::common::funcs::isRepository()) {
-        revertFilesFromCommit(argv[1], argv[2]);
+        if(!line::cli::common::funcs::isCheckouted()) {
+            revertFilesFromCommit(argv[1], argv[2]);
+        }
     }
 }

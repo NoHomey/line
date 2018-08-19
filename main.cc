@@ -1,34 +1,13 @@
 
 #include <iostream>
-#include "./core/DirectoryStructure.thd"
-
-int main() {
-    line::core::DirectoryStructure<int> tree{"~/tmp/play-with-git"};
-
-    tree.insert(
-        line::core::FilePathIterator{line::core::String::StringSlice{"a/b/c/f.txt", 11}},
-        22
-    );
-
-    tree.insert(
-        line::core::FilePathIterator{line::core::String::StringSlice{"a/folder/f.txt", 14}},
-        18
-    );
-
-    std::cout << tree.remove(
-        line::core::FilePathIterator{line::core::String::StringSlice{"a/b/c/f.txt", 11}}
-    ) << std::endl;
-
-    return 0;
-}
-
-/*#include <cassert>
+#include <cassert>
 #include <cstring>
 #include "./cli/init/init.h"
 #include "./cli/log/log.h"
 #include "./cli/status/status.h"
 #include "./cli/commit/commit.h"
 #include "./cli/revert/revert.h"
+#include "./cli/checkout/checkout.h"
 
 struct Command {
     const char* name;
@@ -46,13 +25,14 @@ static void seeHelp() {
 }
 
 int main(int argc, char** argv) {
-    const unsigned int commandsCount = 5;
+    const unsigned int commandsCount = 6;
     Command commands[commandsCount] = {
         {"init", line::cli::init},
         {"log", line::cli::log},
         {"status", line::cli::status},
         {"commit", line::cli::commit},
-        {"revert", line::cli::revert}
+        {"revert", line::cli::revert},
+        {"checkout", line::cli::checkout}
     };
     void (*command)(int, char**) = nullptr;
     if(argc == 1) {
@@ -75,4 +55,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-}*/
+}

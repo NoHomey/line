@@ -7,6 +7,12 @@
 #include <cstdlib>
 #include <cstring>
 #include "../Navigator/Navigator.h"
+#include "../FileLineReader/FileLineReader.h"
+#include "../Timestamp/Timestamp.h"
+#include "../../core/FilePathIterator/FilePathIterator.h"
+
+line::cli::common::FileStatus::FileStatus(const line::core::Hasher::Hash& fileHash, FileAction action) noexcept
+: fileHash{fileHash}, action{action} { }
 
 line::cli::common::DirectoryCheckResult line::cli::common::funcs::checkIsDirectory(const char* directoryPath) {
     struct stat statStruct;
@@ -133,4 +139,60 @@ bool line::cli::common::funcs::parseCommitId(std::size_t& commitId, const char* 
         return true;
     }
     return false;
+}
+
+bool line::cli::common::funcs::ensurePathExists(line::core::PathBuilder& pathBuilder, const line::core::String::StringSlice& filePath) {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    line::core::FilePathIterator filePathIterator{filePath};
+    pathBuilder.empty();
+    pathBuilder.addToPath(navigator.navigateToDirectory());
+    while(filePathIterator) {
+        pathBuilder.addToPath(*filePathIterator);
+        line::cli::common::DirectoryCheckResult directoryCheckResult
+            = line::cli::common::funcs::checkIsDirectory(pathBuilder.path().beginning);
+        if(directoryCheckResult == line::cli::common::DirectoryCheckResult::NotADirectory) {
+            return false;
+        }
+        if(directoryCheckResult == line::cli::common::DirectoryCheckResult::NotExist) {
+            break;
+        }
+        ++filePathIterator;
+    }
+    while(filePathIterator) {
+        if(line::cli::common::funcs::mkdirWithPermisions(pathBuilder.path().beginning)) {
+            return false;
+        }
+        ++filePathIterator;
+        if(filePathIterator) {
+            pathBuilder.addToPath(*filePathIterator);
+        }
+    }
+    pathBuilder.addToPath(filePathIterator.getFileName());
+    return true;
+}
+
+static void failFromCheckout(std::size_t commitId) {
+    line::cli::common::FileLineReader commitFile{line::cli::common::Navigator::navigator().navigateToCommit(commitId)};
+    line::cli::common::Timestamp commitTimestamp = line::cli::common::Timestamp::fromString((*commitFile).beginning);
+    ++commitFile;
+    std::cout << "Fatal: this operation can't be performed while beeing checkouted to commit preceding HEAD." << std::endl;
+    std::cout << "Currently checkouted at commit " << commitId << ": \""
+        << (*commitFile) << "\" from " << commitTimestamp << " by ";
+    ++commitFile;
+    std::cout << (*commitFile) << std::endl;
+} 
+
+bool line::cli::common::funcs::isCheckouted() {
+    line::cli::common::Navigator& navigator = line::cli::common::Navigator::navigator();
+    if(fileExists(navigator.navigateToCheckoutInfo())) {
+        std::ifstream checkout;
+        std::size_t commitId;
+        checkout.exceptions(std::ifstream::badbit);
+        checkout.open(navigator.path());
+        checkout >> commitId;
+        checkout.close();
+        failFromCheckout(commitId);
+        return true;
+    }
+    return false; 
 }

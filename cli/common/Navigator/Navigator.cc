@@ -30,6 +30,12 @@ const char* line::cli::common::Navigator::navigateToRepoInfoDir() noexcept {
     return currentPath;
 }
 
+const char* line::cli::common::Navigator::navigateToCheckoutInfo() noexcept {
+    assert(isInitialized());
+    std::memcpy(currentPath + directoryPathLength, "/.line/checkout", 16);
+    return currentPath;
+}
+
 const char* line::cli::common::Navigator::navigateToCommits() noexcept {
     assert(isInitialized());
     std::memcpy(currentPath + directoryPathLength, "/.line/commits", 15);

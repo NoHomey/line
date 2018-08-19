@@ -24,6 +24,8 @@ public:
 
     const char* navigateToRepoInfoDir() noexcept;
 
+    const char* navigateToCheckoutInfo() noexcept;
+
     const char* navigateToCommits() noexcept;
 
     const char* navigateToCommitsCounter() noexcept;

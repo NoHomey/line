@@ -6,7 +6,7 @@ Executable = line
 
 CoreObjects = PatternMatcher Hasher FileRecursiveIterator FilePathIterator PathBuilder String
 
-CliObjects = Navigator PathCutter Timestamp FileLineReader FilePathMatcher cliCommonFuncs init log status commit revert
+CliObjects = Navigator PathCutter Timestamp FileLineReader FilePathMatcher cliCommonFuncs init log status commit revert checkout
 
 Objects = $(CliObjects) $(CoreObjects)
 
@@ -60,9 +60,11 @@ $(eval $(call Object,$(cli),status,cliCommonFuncs FileRecursiveIterator Hasher P
 
 $(eval $(call Object,$(cli),commit,cliCommonFuncs FileRecursiveIterator Hasher Timestamp PathCutter))
 
-$(eval $(call Object,$(cli),revert,cliCommonFuncs Hasher PathBuilder FilePathIterator Navigator FileLineReader FilePathMatcher))
+$(eval $(call Object,$(cli),revert,cliCommonFuncs Hasher PathBuilder Navigator FileLineReader FilePathMatcher))
 
-cliCommonFuncs.o: $(cliCommon)/funcs/funcs.cc Navigator.o
+$(eval $(call Object,$(cli),checkout,cliCommonFuncs Hasher PathBuilder Navigator PathCutter Timestamp FileLineReader FilePathMatcher))
+
+cliCommonFuncs.o: $(cliCommon)/funcs/funcs.cc Navigator.o FilePathIterator.o FileLineReader.o Timestamp.o
 	$(COMPILER) -c -o cliCommonFuncs.o $< $(IncludeLibCrypto)
 
 clean:
