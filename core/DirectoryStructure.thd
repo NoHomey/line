@@ -32,6 +32,8 @@ public:
 public:
     bool isEmpty() const noexcept;
 
+    std::size_t maxAbsoluteFilePathLength() const noexcept;
+
     line::utils::types::Optional<const FileInfo&> find(FilePathIterator&& filePathIterator) const;
 
 public:
@@ -245,6 +247,11 @@ template<typename FileInfo>
 bool
 line::core::DirectoryStructure<FileInfo>::isEmpty() const noexcept {
     return rootDir.isEmpty();
+}
+template<typename FileInfo>
+std::size_t
+line::core::DirectoryStructure<FileInfo>::maxAbsoluteFilePathLength() const noexcept {
+    return !isEmpty() ? (maxFilePathLength + directoryPathLength + 2) : 0;
 }
 
 template<typename FileInfo>
@@ -463,8 +470,7 @@ template<typename FileInfo>
 template<bool Const>
 line::core::DirectoryStructure<FileInfo>::InternalFileIterator<Const>::InternalFileIterator(DirectoryStructureType& directoryStructure)
 : directoryPath{!directoryStructure.isEmpty() ? directoryStructure.maxFilePathDepth : 0},
-filePath{!directoryStructure.isEmpty()
-    ? (directoryStructure.maxFilePathLength + directoryStructure.directoryPathLength + 2) : 0},
+filePath{directoryStructure.maxAbsoluteFilePathLength()},
 fileIterator{} {
     if(!directoryStructure.isEmpty()) {
         filePath.addToPath(line::core::String::StringSlice{

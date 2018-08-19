@@ -86,7 +86,7 @@ static void updateAndAddFiles(const line::core::DirectoryStructure<line::cli::co
 }
 
 static void reflectToWorkingDir(line::core::DirectoryStructure<line::cli::common::FileStatus>& diffTree) {
-    line::core::PathBuilder pathBuilder{256};
+    line::core::PathBuilder pathBuilder{diffTree.maxAbsoluteFilePathLength()};
     removeFiles(diffTree, pathBuilder);
     updateAndAddFiles(diffTree, pathBuilder);
 }
